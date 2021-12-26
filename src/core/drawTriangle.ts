@@ -1,19 +1,13 @@
-import $ from "jquery";
+import { Triangle } from "../shaders/triangle";
 
-import { CheckWebGPU } from "./helper";
-
-import { Triangle } from "./shaders/triangle";
-
-var webgpuContent = CheckWebGPU() ? "支持WebGPU" : "支持WebGPU";
-
-const CreateTrangle = async () => { 
-    const canvas = document.getElementById('webgpu-learn-canvas') as HTMLCanvasElement;
+export const CreateTrangle = async (canvasName: string) => { 
+    const canvas = document.getElementById(canvasName) as HTMLCanvasElement;
     const adapter = await navigator.gpu.requestAdapter() as GPUAdapter;
     const device = await adapter.requestDevice() as GPUDevice;
     const context = canvas.getContext('webgpu') as unknown as GPUCanvasContext;
 
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const presentationSize = [canvas.clientWidth, canvas.clientHeight];
+    const presentationSize = [canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio];
     const presentationFormat = context.getPreferredFormat(adapter);
     context.configure({
         device,
@@ -59,5 +53,3 @@ const CreateTrangle = async () => {
 
     device.queue.submit([commandEncoder.finish()]);
 }
-
-CreateTrangle();

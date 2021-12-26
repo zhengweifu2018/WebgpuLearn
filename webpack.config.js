@@ -5,7 +5,7 @@ const bundleOutputDir = "./dist";
 
 module.exports = {
     entry: {
-        main: "./src/main"  
+        main: "./src/App"  
     },
     output: {
         filename: "[name].bundle.js",
@@ -14,7 +14,7 @@ module.exports = {
     },
     devtool: "source-map",
     resolve: {
-        extensions: ['.js', '.ts']
+        extensions: ['.js', '.ts', '.tsx']
     },
     module: {
         rules: [

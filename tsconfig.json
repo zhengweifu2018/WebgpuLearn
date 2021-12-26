@@ -6,6 +6,7 @@
         "lib": ["es2017", "dom"],
         "types": ["node", "@webgpu/types"],
         "module": "es2015",
+        "jsx": "react",
         "esModuleInterop": true,
         "strict": true,
         "sourceMap": true
