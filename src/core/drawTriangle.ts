@@ -1,30 +1,20 @@
-import { Triangle } from "../shaders/triangle";
+import { CreateDevice } from "./common";
+
+import TriangleVertexShader from "../shaders/triangle/vertex_shader.wgsl";
+import TriangleFragmentShader from "../shaders/triangle/fragment_shader.wgsl";
 
 export const CreateTrangle = async (canvasName: string) => { 
-    const canvas = document.getElementById(canvasName) as HTMLCanvasElement;
-    const adapter = await navigator.gpu.requestAdapter() as GPUAdapter;
-    const device = await adapter.requestDevice() as GPUDevice;
-    const context = canvas.getContext('webgpu') as unknown as GPUCanvasContext;
-
-    const devicePixelRatio = window.devicePixelRatio || 1;
-    const presentationSize = [canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio];
-    const presentationFormat = context.getPreferredFormat(adapter);
-    context.configure({
-        device,
-        format: presentationFormat,
-        size: presentationSize
-    });
-
+    const { device, context, presentationSize, presentationFormat } = await CreateDevice(canvasName);
     const pipeline = device.createRenderPipeline({
         vertex: {
             module: device.createShaderModule({
-                code: Triangle().vertex
+                code: TriangleVertexShader
             }),
             entryPoint: "main"
         },
         fragment: {
             module: device.createShaderModule({
-                code: Triangle().fragment
+                code: TriangleFragmentShader
             }),
             entryPoint: "main",
             targets: [{

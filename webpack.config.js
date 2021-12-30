@@ -27,9 +27,15 @@ module.exports = {
                 test: /\.css$/,
                 sideEffects: true,
                 loader: "css-loader"
+            },
+            {
+                test: /\.wgsl$/,
+                use: 'raw-loader'
             }
         ]
     },
+    mode: 'development',
+    devtool: 'inline-source-map',
     plugins: [
         new HtmlWebpackPlugin({
             filename: path.resolve(__dirname, 'index.html'),
