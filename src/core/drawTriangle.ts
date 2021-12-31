@@ -1,10 +1,10 @@
-import { CreateDevice } from "./common";
+import { InitGPU } from "./common";
 
 import TriangleVertexShader from "../shaders/triangle/vertex_shader.wgsl";
 import TriangleFragmentShader from "../shaders/triangle/fragment_shader.wgsl";
 
 export const CreateTrangle = async (canvasName: string) => { 
-    const { device, context, presentationSize, presentationFormat } = await CreateDevice(canvasName);
+    const { device, context, presentationSize, presentationFormat } = await InitGPU(canvasName);
     const pipeline = device.createRenderPipeline({
         vertex: {
             module: device.createShaderModule({

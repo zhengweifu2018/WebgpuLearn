@@ -34,8 +34,8 @@ module.exports = {
             }
         ]
     },
-    mode: 'development',
-    devtool: 'inline-source-map',
+    // mode: 'development',
+    // devtool: 'inline-source-map',
     plugins: [
         new HtmlWebpackPlugin({
             filename: path.resolve(__dirname, 'index.html'),

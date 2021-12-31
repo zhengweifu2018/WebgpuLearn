@@ -1,15 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter, Switch,  Route } from 'react-router-dom'; 
+import { HashRouter, Switch,  Route } from 'react-router-dom'; 
 
 import TrianglePage from './pages/TrianglePage';
+import QuadranglePage from './pages/QuadranglePage';
 
 let App:React.FC = () => {
-    return <Switch>
-        <Route exact path='/' component={TrianglePage} />
-	</Switch>
+    return <div>
+        <Route exact path='/' component={QuadranglePage} />
+        <Route exact path='/triangle' component={TrianglePage} />
+        {/* <Route exact path='/quadrangle' component={QuadranglePage} /> */}
+    </div>
 }
 
-ReactDOM.render(<BrowserRouter>
+ReactDOM.render(<HashRouter>
 	<App />
-</BrowserRouter>, document.getElementById('app'));
+</HashRouter>, document.getElementById('app'));
