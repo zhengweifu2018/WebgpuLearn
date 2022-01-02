@@ -2,14 +2,12 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { HashRouter, Switch,  Route } from 'react-router-dom'; 
 
-import TrianglePage from './pages/TrianglePage';
-import QuadranglePage from './pages/QuadranglePage';
+import CanvasPage from './pages/CanvasPage';
 
 let App:React.FC = () => {
     return <div>
-        <Route exact path='/' component={QuadranglePage} />
-        <Route exact path='/triangle' component={TrianglePage} />
-        {/* <Route exact path='/quadrangle' component={QuadranglePage} /> */}
+        {/* e.g: xxx:xxx/#/webgpu/shader_triangle */}
+        <Route exact path='/webgpu/:sample' component={CanvasPage} />
     </div>
 }
 
