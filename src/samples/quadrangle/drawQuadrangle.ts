@@ -1,7 +1,7 @@
-import { InitGPU, CreateVertexBuffer, CreateIndexBuffer } from "./common";
+import { InitGPU, CreateVertexBuffer, CreateIndexBuffer } from "../common";
 
-import QuadVertexShader from "../shaders/quadrangle/vertex_shader.wgsl";
-import QuadFragmentShader from "../shaders/quadrangle/fragment_shader.wgsl";
+import QuadVertexShader from "./vertex_shader.wgsl";
+import QuadFragmentShader from "./fragment_shader.wgsl";
 
 export const CreateBufferQuadrangle = async (canvasName: string) => { 
     const { device, context, presentationSize, presentationFormat } = await InitGPU(canvasName);

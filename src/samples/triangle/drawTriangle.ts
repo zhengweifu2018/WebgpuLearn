@@ -1,7 +1,7 @@
-import { InitGPU } from "./common";
+import { InitGPU } from "../common";
 
-import TriangleVertexShader from "../shaders/triangle/vertex_shader.wgsl";
-import TriangleFragmentShader from "../shaders/triangle/fragment_shader.wgsl";
+import TriangleVertexShader from "./vertex_shader.wgsl";
+import TriangleFragmentShader from "./fragment_shader.wgsl";
 
 export const CreateTrangle = async (canvasName: string) => { 
     const { device, context, presentationSize, presentationFormat } = await InitGPU(canvasName);
