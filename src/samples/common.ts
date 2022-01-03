@@ -1,5 +1,3 @@
-import { buffer } from "stream/consumers";
-
 // 初始化GPU
 export const InitGPU = async (CanvasName: string) => {
     const canvas = document.getElementById(CanvasName) as HTMLCanvasElement;
@@ -20,7 +18,7 @@ export const InitGPU = async (CanvasName: string) => {
 }
 
 // 创建GPU Vertex Buffer
-export const CreateVertexBuffer = (
+export const CreateVertexBuffer  = (
     device: GPUDevice,
     data: Float32Array,
     usageFlag: GPUBufferUsageFlags = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST) => { 
@@ -50,4 +48,35 @@ export const CreateIndexBuffer = (
 }
 
 // 创建GPU 2D Texture
-export const CreateTexture2D = () => { }
+export const CreateTexture2D = async (
+    device: GPUDevice,
+    imgUrl: string,
+    addressModeU: GPUAddressMode = "repeat",
+    addressModeV: GPUAddressMode = "repeat",
+    minFilter: GPUFilterMode = "linear",
+    magFilter: GPUFilterMode = "linear",
+    format: GPUTextureFormat = "rgba8unorm"
+) => { 
+    let img = document.createElement("img");
+    img.src = imgUrl;
+    await img.decode();
+
+    const imgBitmap = await createImageBitmap(img);
+
+    const texture = device.createTexture({
+        size: [imgBitmap.width, imgBitmap.height, 1],
+        format: format,
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+    });
+
+    const sampler = device.createSampler({
+        minFilter: minFilter,
+        magFilter: magFilter,
+        addressModeU: addressModeU,
+        addressModeV: addressModeV
+    });
+
+    device.queue.copyExternalImageToTexture({ source: imgBitmap }, { texture: texture }, [imgBitmap.width, imgBitmap.height]);
+    
+    return { texture, sampler };
+}

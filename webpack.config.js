@@ -31,6 +31,10 @@ module.exports = {
             {
                 test: /\.wgsl$/,
                 use: 'raw-loader'
+            },
+            {
+                test: /\.jpg$/,
+                use: 'raw-loader'
             }
         ]
     },

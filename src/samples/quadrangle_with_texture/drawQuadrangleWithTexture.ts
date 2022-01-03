@@ -1,9 +1,9 @@
-import { InitGPU, CreateVertexBuffer, CreateIndexBuffer } from "../common";
+import { InitGPU, CreateVertexBuffer, CreateIndexBuffer, CreateTexture2D } from "../common";
 
 import QuadVertexShader from "./vertex_shader.wgsl";
 import QuadFragmentShader from "./fragment_shader.wgsl";
 
-export const CreateBufferQuadrangle = async (canvasName: string) => { 
+export const CreateQuadrangleWithTexture = async (canvasName: string) => { 
     const { device, context, presentationSize, presentationFormat } = await InitGPU(canvasName);
     
     const vertexData = new Float32Array([
@@ -13,17 +13,15 @@ export const CreateBufferQuadrangle = async (canvasName: string) => {
         -0.5, -0.5,
     ]);
 
-    const colorData = new Float32Array([
-        1, 0, 0,
-        0, 1, 0,
-        0, 0, 1,
-        1, 1, 1
+    const uvData = new Float32Array([
+        0, 1,
+        1, 1,
+        1, 0,
+        0, 0
     ]);
         
     let vertexBuffer = CreateVertexBuffer(device, vertexData, GPUBufferUsage.VERTEX);
-    let colorBuffer = CreateVertexBuffer(device, colorData, GPUBufferUsage.VERTEX);
-
-    
+    let uvBuffer = CreateVertexBuffer(device, uvData, GPUBufferUsage.VERTEX);
 
     const pipeline = device.createRenderPipeline({
         vertex: {
@@ -35,8 +33,8 @@ export const CreateBufferQuadrangle = async (canvasName: string) => {
                 arrayStride: 8,
                 attributes: [{shaderLocation: 0, format: "float32x2", offset: 0}]
             }, {
-                arrayStride: 12,
-                attributes: [{shaderLocation: 1, format: "float32x3", offset: 0}]
+                arrayStride: 8,
+                attributes: [{shaderLocation: 1, format: "float32x2", offset: 0}]
             }]
         },
         fragment: {
@@ -51,6 +49,19 @@ export const CreateBufferQuadrangle = async (canvasName: string) => {
         primitive: {
             topology: "triangle-list"
         }
+    });
+
+    const ts = await CreateTexture2D(device, "assets/images/brick.jpg");
+
+    const uniformBindGroup = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [{
+            binding: 0,
+            resource: ts.sampler
+        }, {
+            binding: 1,
+            resource:ts.texture.createView()
+        }]
     });
 
     const commandEncoder = device.createCommandEncoder();
@@ -70,7 +81,7 @@ export const CreateBufferQuadrangle = async (canvasName: string) => {
     renderPass.setPipeline(pipeline);
 
     renderPass.setVertexBuffer(0, vertexBuffer);
-    renderPass.setVertexBuffer(1, colorBuffer);
+    renderPass.setVertexBuffer(1, uvBuffer);
     
     // 创建IndexBuffer并设置到RenderPass中
     {
@@ -81,7 +92,7 @@ export const CreateBufferQuadrangle = async (canvasName: string) => {
         let indexBuffer = CreateIndexBuffer(device, indexData, GPUBufferUsage.INDEX);
         renderPass.setIndexBuffer(indexBuffer, "uint32");
     }
-
+    renderPass.setBindGroup(0, uniformBindGroup);
     renderPass.drawIndexed(6, 1, 0, 0, 0);
     renderPass.endPass();
 

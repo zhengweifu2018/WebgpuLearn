@@ -4,6 +4,7 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 
 import { CreateTrangle } from "../samples/triangle/drawTriangle";
 import { CreateBufferQuadrangle } from "../samples/quadrangle/drawQuadrangle";
+import { CreateQuadrangleWithTexture } from "../samples/quadrangle_with_texture/drawQuadrangleWithTexture";
 
 export interface Props {
     sample?: string;
@@ -26,6 +27,9 @@ class CanvasPage extends React.Component<thisProps, {}> {
                     break;
                 case "buffer_quad":
                     CreateBufferQuadrangle(canvasName);
+                    break;
+                case "quad_with_texture":
+                    CreateQuadrangleWithTexture(canvasName);
                     break;
                 default:
                     CreateBufferQuadrangle(canvasName);
