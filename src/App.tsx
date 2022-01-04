@@ -1,3 +1,4 @@
+// https://segmentfault.com/a/1190000040716735
 import React from "react";
 import ReactDOM from "react-dom";
 import { HashRouter, Switch,  Route } from 'react-router-dom'; 

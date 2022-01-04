@@ -2,9 +2,9 @@ import React from "react";
 
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
-import { CreateTrangle } from "../samples/triangle/drawTriangle";
-import { CreateBufferQuadrangle } from "../samples/quadrangle/drawQuadrangle";
-import { CreateQuadrangleWithTexture } from "../samples/quadrangle_with_texture/drawQuadrangleWithTexture";
+import { CreateTrangle } from "../samples/triangle/draw";
+import { CreateBufferQuadrangle } from "../samples/quadrangle/draw";
+import { CreateQuadrangleWithTexture } from "../samples/quadrangle_with_texture/draw";
 
 export interface Props {
     sample?: string;
