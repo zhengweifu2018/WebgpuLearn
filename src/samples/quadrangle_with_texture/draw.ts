@@ -52,6 +52,17 @@ export const CreateQuadrangleWithTexture = async (canvasName: string) => {
     });
 
     const ts = await CreateTexture2D(device, "assets/images/brick.jpg");
+    const bindGroupLayout = device.createBindGroupLayout({
+        entries: [{
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            sampler: {type: "filtering"}
+        }, {
+            binding: 1,
+            visibility: GPUShaderStage.FRAGMENT,
+            texture: {sampleType: 'float'}
+        }]
+    });
 
     const uniformBindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),

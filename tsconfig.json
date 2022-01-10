@@ -4,9 +4,10 @@
         "outDir": "dist",
         "target": "es6",
         "lib": ["es2017", "dom"],
-        "types": ["node", "@webgpu/types"],
         "module": "es2015",
+        "types": ["node", "@webgpu/types"],
         "jsx": "react",
+        "moduleResolution": "Node",
         "esModuleInterop": true,
         "strict": true,
         "sourceMap": true
@@ -15,6 +16,29 @@
         "src/**/*.ts",
         "src/**/*.tsx",
         "src/**/*.d.ts",
-    ],
-    "exclude": ["node_modules"]
+    ]
 }
+
+// {
+//     "compilerOptions": {
+//         "sourceMap": true,
+//         "strict": false,
+//         "module": "esnext",
+//         "moduleResolution": "Node",
+//         "types": ["nodes", "@webgpu/types"],
+//         "allowSyntheticDefaultImports": true,
+//         "resolveJsonModule": true,
+//         "target": "es2015",
+//         "allowJs": true,
+//         "baseUrl": "./src/",
+//         "lib": [
+//             "DOM",
+//             "ES7",
+//             "DOM.Iterable",
+//             "ScriptHost"
+//         ]
+//     },
+//     "include": [
+//         "./src/**/*"
+//     ]
+// }
