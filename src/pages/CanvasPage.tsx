@@ -2,10 +2,10 @@ import React from "react";
 
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
-import { CreateTrangle } from "../samples/triangle/draw";
-import { CreateBufferQuadrangle } from "../samples/quadrangle/draw";
-import { CreateQuadrangleWithTexture } from "../samples/quadrangle_with_texture/draw";
-import { CreateCube } from "../samples/cube/draw";
+import { CreateTrangle } from "../samples/00triangle/draw";
+import { CreateBufferQuadrangle } from "../samples/01quadrangle/draw";
+import { CreateQuadrangleWithTexture } from "../samples/02quadrangle_with_texture/draw";
+import { CreateCube } from "../samples/03cube/draw";
 
 export interface Props {
     sample?: string;
