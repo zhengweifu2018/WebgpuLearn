@@ -72,7 +72,7 @@ export const CreateCube = async (canvasName: string) => {
         primitive: {
             topology: "triangle-list"
         },
-        depthStencil:{
+        depthStencil:{ // 深度模板
             format: "depth24plus",
             depthWriteEnabled: true,
             depthCompare: "less"
@@ -95,9 +95,11 @@ export const CreateCube = async (canvasName: string) => {
     // 相机矩阵
     let viewMatrix: mat4 = mat4.create();
     mat4.lookAt(viewMatrix, cameraPosition, lookDir, upDir);
+    let viewMatrixInvert: mat4 = mat4.create();
+    mat4.invert(viewMatrixInvert, viewMatrix);
 
     let viewProjectionMatrix: mat4 = mat4.create();
-    mat4.multiply(viewProjectionMatrix, projectionMatrix, viewProjectionMatrix);
+    mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
 
     // 模型矩阵
     const modelMatrix: mat4 = mat4.create();
@@ -135,7 +137,7 @@ export const CreateCube = async (canvasName: string) => {
         colorAttachments: [{
             view: textureView,
             loadValue: {
-                r: 0, g: 0, b: 0, a: 1.0
+                r: 0, g: 0, b: 0.5, a: 1.0
             },
             storeOp: 'store'
         }],
@@ -148,6 +150,7 @@ export const CreateCube = async (canvasName: string) => {
         }
     };
 
+    // mvp uniform buffer 传给 gpu
     device.queue.writeBuffer(uniformBuffer, 0, mvpMatrix as ArrayBuffer);
 
     // 创建RenderPass
