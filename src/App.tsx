@@ -6,7 +6,7 @@ import { HashRouter, Switch,  Route } from 'react-router-dom';
 import CanvasPage from './pages/CanvasPage';
 
 let App:React.FC = () => {
-    return <div>
+    return <div style={{width: "100%", height: "100%"}}>
         {/* e.g: xxx:xxx/#/webgpu/shader_triangle */}
         <Route exact path='/webgpu/:sample' component={CanvasPage} />
     </div>

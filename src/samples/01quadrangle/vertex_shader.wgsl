@@ -1,6 +1,6 @@
 struct VSData {
-    @builtin(position) vPosition : vec4<f32>;
-    @location(1) vColor : vec3<f32>;
+    @builtin(position) vPosition : vec4<f32>,
+    @location(1) vColor : vec3<f32>,
 };
 
 @stage(vertex)

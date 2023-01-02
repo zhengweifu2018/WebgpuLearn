@@ -25,19 +25,19 @@ class CanvasPage extends React.Component<thisProps, {}> {
             let sampleName = matchParams.sample;
             console.log(sampleName);
             switch (sampleName) { 
-                case "shader_triangle":
+                case "00triangle":
                     CreateTrangle(canvasName);
                     break;
-                case "buffer_quad":
+                case "01quadrangle":
                     CreateBufferQuadrangle(canvasName);
                     break;
-                case "quad_with_texture":
+                case "02quadrangle_with_texture":
                     CreateQuadrangleWithTexture(canvasName);
                     break;
-                case "cube":
+                case "03cube":
                     CreateCube(canvasName);
                     break;
-                case "simple_frame":
+                case "04simple_frame":
                     Draw(canvasName);
                     break;
                 default:
@@ -47,8 +47,8 @@ class CanvasPage extends React.Component<thisProps, {}> {
         }
     }
     public render(): React.ReactNode {
-        return <div>
-            {navigator.gpu ? <canvas id="webgpu-learn-canvas" width="640" height="480"></canvas> : "当前浏览器不支持WebGPU!"}
+        return <div style={{width: "100%", height: "100%"}}>
+            {navigator.gpu ? <canvas id="webgpu-learn-canvas" style={{width: "100%", height: "100%"}}></canvas> : "当前浏览器不支持WebGPU!"}
         </div>
     }
 }

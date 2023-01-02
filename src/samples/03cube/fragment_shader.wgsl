@@ -1,6 +1,6 @@
 struct SInput {
-    //@location(0) vPosition : vec4<f32>;
-    @location(1) vColor : vec4<f32>;
+    //@location(0) vPosition : vec4<f32>,
+    @location(1) vColor : vec4<f32>,
 };
 
 @stage(fragment)

@@ -49,7 +49,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            filename: path.resolve(__dirname, 'index.html'),
+            filename: path.resolve(__dirname, 'sample.html'),
             template: path.resolve(__dirname, 'template.html'),
             minify: false,
             hash: true
