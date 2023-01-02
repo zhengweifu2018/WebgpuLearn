@@ -26,6 +26,7 @@ export const CreateBufferQuadrangle = async (canvasName: string) => {
     
 
     const pipeline = device.createRenderPipeline({
+        layout: "auto",
         vertex: {
             module: device.createShaderModule({
                 code: QuadVertexShader
@@ -83,7 +84,7 @@ export const CreateBufferQuadrangle = async (canvasName: string) => {
     }
 
     renderPass.drawIndexed(6, 1, 0, 0, 0);
-    renderPass.endPass();
+    renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);
 }

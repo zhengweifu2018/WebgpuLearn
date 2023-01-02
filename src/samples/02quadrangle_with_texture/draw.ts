@@ -24,6 +24,7 @@ export const CreateQuadrangleWithTexture = async (canvasName: string) => {
     let uvBuffer = CreateVertexBuffer(device, uvData, GPUBufferUsage.VERTEX);
 
     const pipeline = device.createRenderPipeline({
+        layout: 'auto',
         vertex: {
             module: device.createShaderModule({
                 code: QuadVertexShader
@@ -80,9 +81,10 @@ export const CreateQuadrangleWithTexture = async (canvasName: string) => {
     const renderPassDescriptor = {
         colorAttachments: [{
             view: textureView,
-            loadValue: {
+            clearValue: {
                 r: 0, g: 0, b: 0, a: 1.0
             },
+            loadOp: 'clear',
             storeOp: 'store'
         }]
     } as GPURenderPassDescriptor;
@@ -105,7 +107,7 @@ export const CreateQuadrangleWithTexture = async (canvasName: string) => {
     }
     renderPass.setBindGroup(0, uniformBindGroup);
     renderPass.drawIndexed(6, 1, 0, 0, 0);
-    renderPass.endPass();
+    renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);
 }

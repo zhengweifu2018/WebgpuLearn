@@ -6,6 +6,7 @@ import TriangleFragmentShader from "./fragment_shader.wgsl";
 export const CreateTrangle = async (canvasName: string) => { 
     const { device, context, presentationSize, presentationFormat } = await InitGPU(canvasName);
     const pipeline = device.createRenderPipeline({
+        layout: "auto",
         vertex: {
             module: device.createShaderModule({
                 code: TriangleVertexShader
@@ -39,7 +40,7 @@ export const CreateTrangle = async (canvasName: string) => {
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
     passEncoder.setPipeline(pipeline);
     passEncoder.draw(3, 1, 0, 0);
-    passEncoder.endPass();
+    passEncoder.end();
 
     device.queue.submit([commandEncoder.finish()]);
 }

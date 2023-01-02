@@ -12,7 +12,7 @@ module.exports = {
         path: path.join(__dirname, bundleOutputDir),
         publicPath: 'dist/'
     },
-    devtool: "source-map",
+    //devtool: "source-map",
     resolve: {
         extensions: ['.js', '.ts', '.tsx']
     },
@@ -42,8 +42,11 @@ module.exports = {
             }
         ]
     },
-    // mode: 'development',
-    // devtool: 'inline-source-map',
+    mode: 'development',
+    devtool: 'inline-source-map',
+    optimization: {
+        minimize: false
+    },
     plugins: [
         new HtmlWebpackPlugin({
             filename: path.resolve(__dirname, 'index.html'),

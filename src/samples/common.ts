@@ -8,10 +8,12 @@ export const InitGPU = async (CanvasName: string) => {
     const devicePixelRatio = window.devicePixelRatio || 1;
     const presentationSize = [canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio];
     const presentationFormat = context.getPreferredFormat(adapter);
+    const compositingAlphaMode = "opaque";
     context.configure({
         device,
         format: presentationFormat,
-        size: presentationSize
+        size: presentationSize,
+        compositingAlphaMode
     });
 
     return { device, context, presentationSize, presentationFormat };

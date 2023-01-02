@@ -42,6 +42,7 @@ export const CreateCube = async (canvasName: string) => {
     let vertexBuffer: GPUBuffer = CreateVertexBuffer(device, vertexData, GPUBufferUsage.VERTEX);
 
     const pipeline: GPURenderPipeline = device.createRenderPipeline({
+        layout: "auto",
         vertex: {
             module: device.createShaderModule({
                 code: VertexShader
@@ -95,8 +96,6 @@ export const CreateCube = async (canvasName: string) => {
     // 相机矩阵
     let viewMatrix: mat4 = mat4.create();
     mat4.lookAt(viewMatrix, cameraPosition, lookDir, upDir);
-    let viewMatrixInvert: mat4 = mat4.create();
-    mat4.invert(viewMatrixInvert, viewMatrix);
 
     let viewProjectionMatrix: mat4 = mat4.create();
     mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
@@ -136,16 +135,19 @@ export const CreateCube = async (canvasName: string) => {
     const renderPassDescriptor: GPURenderPassDescriptor = {
         colorAttachments: [{
             view: textureView,
-            loadValue: {
+            clearValue: {
                 r: 0, g: 0, b: 0.5, a: 1.0
             },
+            loadOp: 'clear',
             storeOp: 'store'
         }],
         depthStencilAttachment: {
             view: depthTexture.createView(),
-            depthLoadValue: 1.0,
+            depthClearValue: 1.0,
+            depthLoadOp: 'clear',
             depthStoreOp: "store",
-            stencilLoadValue: 0,
+            stencilClearValue: 0,
+            stencilLoadOp: 'clear',
             stencilStoreOp: "store"
         }
     };
@@ -166,7 +168,7 @@ export const CreateCube = async (canvasName: string) => {
     }
     renderPass.setBindGroup(0, uniformBindGroup);
     renderPass.drawIndexed(36, 1, 0, 0, 0);
-    renderPass.endPass();
+    renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);
 }
