@@ -16,7 +16,7 @@ export const InitGPU = async (CanvasName: string) => {
         alphaMode: 'opaque'
     });
 
-    return { device, context, size, format };
+    return { device, context, size, format, canvas };
 }
 
 // 创建GPU Vertex Buffer

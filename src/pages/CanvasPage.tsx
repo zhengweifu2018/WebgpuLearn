@@ -6,8 +6,9 @@ import { CreateTrangle } from "../samples/00triangle/draw";
 import { CreateBufferQuadrangle } from "../samples/01quadrangle/draw";
 import { CreateQuadrangleWithTexture } from "../samples/02quadrangle_with_texture/draw";
 import { CreateCube } from "../samples/03cube/draw";
+import { CreateMovedCube } from "../samples/04cube_move/draw";
 
-import { Draw } from "../samples/04simple_frame/draw";
+import { Draw } from "../samples/99simple_frame/draw";
 
 export interface Props {
     sample?: string;
@@ -37,7 +38,10 @@ class CanvasPage extends React.Component<thisProps, {}> {
                 case "03cube":
                     CreateCube(canvasName);
                     break;
-                case "04simple_frame":
+                case "04cube_move":
+                    CreateMovedCube(canvasName);
+                    break;
+                case "99simple_frame":
                     Draw(canvasName);
                     break;
                 default:
