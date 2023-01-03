@@ -3,7 +3,7 @@ struct SInput {
     @location(1) vColor : vec4<f32>,
 };
 
-@stage(fragment)
+@fragment
 fn main(input: SInput) -> @location(0) vec4<f32> {
     return input.vColor;
 }

@@ -1,11 +1,11 @@
 import { InitGPU, CreateVertexBuffer, CreateIndexBuffer } from "../common";
 import { mat4, vec3 } from "gl-matrix";
 
-import VertexShader from "./vertex_shader.wgsl";
-import FragmentShader from "./fragment_shader.wgsl";
+import VertexShader from "./vertex_shader.wgsl?raw";
+import FragmentShader from "./fragment_shader.wgsl?raw";
 
 export const CreateCube = async (canvasName: string) => { 
-    const { device, context, presentationSize, presentationFormat } = await InitGPU(canvasName);
+    const { device, context,size, format } = await InitGPU(canvasName);
     
     const vertexData = new Float32Array([
         // position,   color
@@ -67,7 +67,7 @@ export const CreateCube = async (canvasName: string) => {
             }),
             entryPoint: "main",
             targets: [{
-                format: presentationFormat
+                format: format
             }]
         },
         primitive: {
@@ -81,7 +81,7 @@ export const CreateCube = async (canvasName: string) => {
     });
 
     // 创建相机
-    const cameraRatio : number = presentationSize[0] / presentationSize[1];
+    const cameraRatio : number = size.width / size.height;
     const cameraFov : number = 2.0 * Math.PI / 5.0;
     const cameraNearClip : number = 0.1;
     const cameraFarClip: number = 100.0;
@@ -125,7 +125,7 @@ export const CreateCube = async (canvasName: string) => {
     });
 
     const depthTexture = device.createTexture({
-        size: [presentationSize[0], presentationSize[1], 1],
+        size: [size.width, size.height, 1],
         format: "depth24plus",
         usage: GPUTextureUsage.RENDER_ATTACHMENT
     });
@@ -145,10 +145,7 @@ export const CreateCube = async (canvasName: string) => {
             view: depthTexture.createView(),
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
-            depthStoreOp: "store",
-            stencilClearValue: 0,
-            stencilLoadOp: 'clear',
-            stencilStoreOp: "store"
+            depthStoreOp: "store"
         }
     };
 

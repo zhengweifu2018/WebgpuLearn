@@ -32,7 +32,7 @@
             text-decoration: underline;
         }
         a.active{
-            color: red;
+            color: blue;
         }
         iframe{
             flex-grow: 1;
@@ -68,7 +68,6 @@
         <a class="sample" target="01quadrangle">Buffer Quad</a>
         <a class="sample" target="02quadrangle_with_texture">Quad With Texture</a>
         <a class="sample" target="03cube">Cube</a>
-        <a class="sample" target="04simple_frame">Simple Frame</a>
     </div>
     <iframe></iframe>
     <a class="src" target="_blank">&lt; &gt;</a>
@@ -80,7 +79,7 @@
             sample.addEventListener('click', ()=>{
                 //window.location.hash = "webgpu_" + sample.target
                 const timeStamp = new Date().getTime()
-                iframe.src = 'http://127.0.0.1:5500/sample.html#/webgpu/' + sample.target + '?' + timeStamp
+                iframe.src = './sample.html#/webgpu/' + sample.target + '?' + timeStamp
                 button.href = 'https://github.com/zhengweifu/WebgpuLearn/tree/main/src/samples/' + sample.target + '/draw.ts'
                 document.querySelector('.active').classList.remove('active')
                 sample.classList.add('active')

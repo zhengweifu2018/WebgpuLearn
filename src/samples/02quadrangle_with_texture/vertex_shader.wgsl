@@ -9,7 +9,7 @@ struct SOutput {
     @location(1) vUV : vec2<f32>,
 };
 
-@stage(vertex)
+@vertex
 fn main(input: SInput) -> SOutput {
     var output: SOutput;
     output.Position = vec4<f32>(input.pos, 0.0, 1.0);

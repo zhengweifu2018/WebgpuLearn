@@ -6,17 +6,17 @@ export const InitGPU = async (CanvasName: string) => {
     const context = canvas.getContext('webgpu') as unknown as GPUCanvasContext;
 
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const presentationSize = [canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio];
-    const presentationFormat = context.getPreferredFormat(adapter);
-    const compositingAlphaMode = "opaque";
+    const size = {width: canvas.clientWidth * devicePixelRatio, height: canvas.clientHeight * devicePixelRatio};
+    canvas.width = size.width;
+    canvas.height = size.height;
+    const format = navigator.gpu.getPreferredCanvasFormat ? navigator.gpu.getPreferredCanvasFormat() : context.getPreferredFormat(adapter);
     context.configure({
         device,
-        format: presentationFormat,
-        size: presentationSize,
-        compositingAlphaMode
+        format,
+        alphaMode: 'opaque'
     });
 
-    return { device, context, presentationSize, presentationFormat };
+    return { device, context, size, format };
 }
 
 // 创建GPU Vertex Buffer

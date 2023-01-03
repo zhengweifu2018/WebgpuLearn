@@ -1,4 +1,4 @@
-import VertexShader from "../shader/vertex_shader.wgsl";
+import VertexShader from "../shader/vertex_shader.wgsl?raw";
 
 export class CGeometry { 
     public vertexData: Array<number>;

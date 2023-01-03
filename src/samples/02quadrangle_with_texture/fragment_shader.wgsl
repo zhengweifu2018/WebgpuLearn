@@ -6,7 +6,7 @@ struct SInput {
     @location(1) vUV : vec2<f32>,
 };
 
-@stage(fragment)
+@fragment
 fn main(input: SInput) -> @location(0) vec4<f32> {
     let textureColor: vec3<f32> = (textureSample(inTextrueData, inTextureSampler, input.vUV)).rgb;
     return vec4<f32>(textureColor, 1.0);

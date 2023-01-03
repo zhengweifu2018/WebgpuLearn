@@ -15,7 +15,7 @@ struct SOutput {
     @location(1) vColor : vec4<f32>,
 };
 
-@stage(vertex)
+@vertex
 fn main(input: SInput) -> SOutput {
     var output: SOutput;
     output.Position = uniforms.mvpMatrix * input.pos;

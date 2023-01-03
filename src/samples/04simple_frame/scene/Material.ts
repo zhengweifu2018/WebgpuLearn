@@ -1,4 +1,4 @@
-import FragmentShader from "../shader/fragment_shader.wgsl";
+import FragmentShader from "../shader/fragment_shader.wgsl?raw";
 
 export class CMaterial { 
     public createFragmentState(

@@ -1,10 +1,10 @@
 import { InitGPU, CreateVertexBuffer, CreateIndexBuffer, CreateTexture2D } from "../common";
 
-import QuadVertexShader from "./vertex_shader.wgsl";
-import QuadFragmentShader from "./fragment_shader.wgsl";
+import QuadVertexShader from "./vertex_shader.wgsl?raw";
+import QuadFragmentShader from "./fragment_shader.wgsl?raw";
 
 export const CreateQuadrangleWithTexture = async (canvasName: string) => { 
-    const { device, context, presentationSize, presentationFormat } = await InitGPU(canvasName);
+    const { device, context, size, format } = await InitGPU(canvasName);
     
     const vertexData = new Float32Array([
         -0.5,  0.5,
@@ -44,7 +44,7 @@ export const CreateQuadrangleWithTexture = async (canvasName: string) => {
             }),
             entryPoint: "main",
             targets: [{
-                format: presentationFormat
+                format: format
             }]
         },
         primitive: {

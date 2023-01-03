@@ -2,10 +2,10 @@
     "compilerOptions": {
         "rootDir": "src",
         "outDir": "dist",
-        "target": "es6",
-        "lib": ["es2017", "dom"],
-        "module": "es2015",
-        "types": ["node", "@webgpu/types"],
+        "target": "ESNext",
+        "lib": ["ESNext", "DOM"],
+        "module": "ESNext",
+        "types": ["node", "vite/client", "@webgpu/types"],
         "jsx": "react",
         "moduleResolution": "Node",
         "esModuleInterop": true,
@@ -19,27 +19,3 @@
         "src/**/*.d.ts",
     ]
 }
-
-// {
-//     "compilerOptions": {
-//         "sourceMap": true,
-//         "strict": false,
-//         "module": "esnext",
-//         "moduleResolution": "Node",
-//         "types": ["nodes", "@webgpu/types"],
-//         "allowSyntheticDefaultImports": true,
-//         "resolveJsonModule": true,
-//         "target": "es2015",
-//         "allowJs": true,
-//         "baseUrl": "./src/",
-//         "lib": [
-//             "DOM",
-//             "ES7",
-//             "DOM.Iterable",
-//             "ScriptHost"
-//         ]
-//     },
-//     "include": [
-//         "./src/**/*"
-//     ]
-// }

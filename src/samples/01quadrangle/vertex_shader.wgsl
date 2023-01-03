@@ -3,7 +3,7 @@ struct VSData {
     @location(1) vColor : vec3<f32>,
 };
 
-@stage(vertex)
+@vertex
 fn main(
     @location(0) pos : vec2<f32>,
     @location(1) col : vec3<f32>) -> VSData {
