@@ -1,6 +1,6 @@
 export class CTexture { 
-    gpuTexture: GPUTexture;
-    gpuSamper: GPUSampler;
+    public gpuTexture: GPUTexture;
+    public gpuSamper: GPUSampler;
 
     create() { 
         

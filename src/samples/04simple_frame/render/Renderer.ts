@@ -21,7 +21,7 @@ export class CRenderer {
 
         const devicePixelRatio = window.devicePixelRatio || 1;
         this._presentationSize = [this._canvas.clientWidth * devicePixelRatio, this._canvas.clientHeight * devicePixelRatio];
-        this._presentationFormat = this._context.getPreferredFormat(this._adapter);
+        this._presentationFormat = navigator.gpu.getPreferredCanvasFormat ? navigator.gpu.getPreferredCanvasFormat() : this._context.getPreferredFormat(this._adapter);
         this._context.configure({
             device: this._device,
             format: this._presentationFormat,
