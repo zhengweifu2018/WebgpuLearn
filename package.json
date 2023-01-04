@@ -23,17 +23,18 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router": "^5.2.1",
-    "react-router-dom": "^5.2.1"
+    "react-router-dom": "^5.2.1",
+    "stats.js": "^0.17.0"
   },
   "devDependencies": {
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
     "@types/react-router": "^5.1.17",
     "@types/react-router-dom": "^5.3.2",
-    "vite": "^4.0.0",
     "@vitejs/plugin-react": "^3.0.0",
     "@webgpu/types": "^0.1.21",
     "gl-matrix": "^3.4.3",
-    "typescript": "^4.9.3"
+    "typescript": "^4.9.3",
+    "vite": "^4.0.0"
   }
 }

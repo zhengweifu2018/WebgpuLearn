@@ -1,5 +1,6 @@
 import { InitGPU, CreateVertexBuffer, CreateIndexBuffer } from "../common";
 import { mat4, vec3 } from "gl-matrix";
+import Stats from "stats.js";
 
 import VertexShader from "./vertex_shader.wgsl?raw";
 import FragmentShader from "./fragment_shader.wgsl?raw";
@@ -161,9 +162,15 @@ export const CreateMovedCube = async (canvasName: string) => {
     // 创建IndexBuffer并设置到RenderPass中
     const indexBuffer: GPUBuffer = CreateIndexBuffer(device, indexData, GPUBufferUsage.INDEX);
 
+    // 创建性能监视器
+    const stats = new Stats();
+    stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+    document.body.appendChild( stats.dom );
 
     const rotation = {x: 0, y: 0, z: 0};
     function renderLoop() {
+        stats.begin();
+
         const rot =  5 * Math.PI / 180;
         rotation.x += rot;
         rotation.y += rot;
@@ -198,6 +205,9 @@ export const CreateMovedCube = async (canvasName: string) => {
 
         const textureView: GPUTextureView = context.getCurrentTexture().createView();
         Draw(device, context, pipeline, textureView, depthView, vertexBuffer, indexBuffer, uniformBindGroup);
+
+        stats.end();
+
         requestAnimationFrame(renderLoop);
     }
 

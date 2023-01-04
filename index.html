@@ -78,7 +78,7 @@
         const samples = document.querySelectorAll('.sample')
         for(let sample of samples){
             sample.addEventListener('click', ()=>{
-                //window.location.hash = "webgpu_" + sample.target
+                window.location.hash = sample.target
                 const timeStamp = new Date().getTime()
                 iframe.src = './sample.html#/webgpu/' + sample.target + '?' + timeStamp
                 button.href = 'https://github.com/zhengweifu/WebgpuLearn/tree/main/src/samples/' + sample.target + '/draw.ts'
@@ -89,10 +89,11 @@
                 }, 200);
             })
         }
-        // if(window.location.hash)
-        //     document.querySelector(`[target=${window.location.hash.slice(1)}]`).click()
-        // else
+        if(window.location.hash) {
+            document.querySelector(`[target="${window.location.hash.slice(1)}"]`).click()
+        } else {
             document.querySelector('.sample.active').click()
+        }
     </script>
 </body>
 </html>
