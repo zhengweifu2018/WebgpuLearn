@@ -1,6 +1,8 @@
 // vite.config.js
 import { defineConfig } from 'vite'
 import react from "@vitejs/plugin-react"
+import requireTransform from 'vite-plugin-require-transform';
+
 import dns from 'dns'
 dns.setDefaultResultOrder('verbatim')
 
@@ -15,7 +17,8 @@ module.exports = defineConfig({
         port: 3000    
     },
     plugins: [
-        react(), 
+        requireTransform({}),
+        react(),
         {
             name: 'origin-trial',
             configureServer: server => {
@@ -25,5 +28,8 @@ module.exports = defineConfig({
                 })
             }
         }
-    ]
+    ],
+    define: {
+        global: {}
+    }
 })

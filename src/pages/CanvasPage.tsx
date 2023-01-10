@@ -8,6 +8,7 @@ import { CreateQuadrangleWithTexture } from "../samples/02quadrangle_with_textur
 import { CreateCube } from "../samples/03cube/draw";
 import { CreateMovedCube } from "../samples/04cube_move/draw";
 import { CreateCubeInstances } from "../samples/05cube_instances/draw";
+import { CreateCameraControls } from "../samples/06camera_controls/draw";
 
 import { Draw } from "../samples/99simple_frame/draw";
 
@@ -44,7 +45,11 @@ class CanvasPage extends React.Component<thisProps, {}> {
                     break;
                 case "05cube_instances":
                     CreateCubeInstances(canvasName);
-                    break;     
+                    break; 
+                case "06camera_controls":
+                    CreateCameraControls(canvasName);
+                    break; 
+                    
                 case "99simple_frame":
                     Draw(canvasName);
                     break;
