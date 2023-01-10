@@ -1,7 +1,7 @@
 // 初始化GPU
 export const InitGPU = async (CanvasName: string) => {
     const canvas = document.getElementById(CanvasName) as HTMLCanvasElement;
-    const adapter = await navigator.gpu.requestAdapter() as GPUAdapter;
+    const adapter = await navigator.gpu.requestAdapter({powerPreference:"high-performance"}) as GPUAdapter;
     const device = await adapter.requestDevice() as GPUDevice;
     const context = canvas.getContext('webgpu') as unknown as GPUCanvasContext;
 
