@@ -9,8 +9,21 @@ import { CreateCube } from "../samples/03cube/draw";
 import { CreateMovedCube } from "../samples/04cube_move/draw";
 import { CreateCubeInstances } from "../samples/05cube_instances/draw";
 import { CreateCameraControls } from "../samples/06camera_controls/draw";
+import { CreateBasicComputePipeline } from "../samples/07basic_compute_pipeline/draw";
 
 import { Draw } from "../samples/99simple_frame/draw";
+
+const SimpleName2Func = new Map<string, Function>([
+    ["00triangle", CreateTrangle],
+    ["01quadrangle", CreateBufferQuadrangle],
+    ["02quadrangle_with_texture", CreateQuadrangleWithTexture],
+    ["03cube", CreateCube],
+    ["04cube_move", CreateMovedCube],
+    ["05cube_instances", CreateCubeInstances], 
+    ["06camera_controls", CreateCameraControls],
+    ["07basic_compute_pipeline", CreateBasicComputePipeline],
+    ["99simple_frame", Draw]
+]);
 
 export interface Props {
     sample?: string;
@@ -25,37 +38,11 @@ class CanvasPage extends React.Component<thisProps, {}> {
         if (navigator.gpu) {
             const canvasName: string = "webgpu-learn-canvas";
             const matchParams = this.props.match.params as Props;
-            let sampleName = matchParams.sample;
+            let sampleName: string = matchParams.sample == undefined? "" : matchParams.sample;
             console.log(sampleName);
-            switch (sampleName) { 
-                case "00triangle":
-                    CreateTrangle(canvasName);
-                    break;
-                case "01quadrangle":
-                    CreateBufferQuadrangle(canvasName);
-                    break;
-                case "02quadrangle_with_texture":
-                    CreateQuadrangleWithTexture(canvasName);
-                    break;
-                case "03cube":
-                    CreateCube(canvasName);
-                    break;
-                case "04cube_move":
-                    CreateMovedCube(canvasName);
-                    break;
-                case "05cube_instances":
-                    CreateCubeInstances(canvasName);
-                    break; 
-                case "06camera_controls":
-                    CreateCameraControls(canvasName);
-                    break; 
-                    
-                case "99simple_frame":
-                    Draw(canvasName);
-                    break;
-                default:
-                    CreateBufferQuadrangle(canvasName);
-                    break;
+            if(SimpleName2Func.has(sampleName)) {
+                const func = SimpleName2Func.get(sampleName) as Function;
+                func(canvasName);
             }
         }
     }
