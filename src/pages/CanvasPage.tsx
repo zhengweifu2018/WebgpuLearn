@@ -12,6 +12,7 @@ import { CreateCameraControls } from "../samples/06camera_controls/draw";
 import { CreateBasicComputePipeline } from "../samples/07basic_compute_pipeline/draw";
 
 import { Draw } from "../samples/99simple_frame/draw";
+import { Test } from "../samples/SimpleEngine/Test";
 
 const SimpleName2Func = new Map<string, Function>([
     ["00triangle", CreateTrangle],
@@ -22,7 +23,8 @@ const SimpleName2Func = new Map<string, Function>([
     ["05cube_instances", CreateCubeInstances], 
     ["06camera_controls", CreateCameraControls],
     ["07basic_compute_pipeline", CreateBasicComputePipeline],
-    ["99simple_frame", Draw]
+    ["99simple_frame", Draw],
+    ["SimpleEngine", Test]
 ]);
 
 export interface Props {
