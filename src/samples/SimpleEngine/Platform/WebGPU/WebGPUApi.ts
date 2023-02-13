@@ -6,7 +6,6 @@ export class WebGPUApi {
         this.m_Adapter = await navigator.gpu.requestAdapter({powerPreference:"high-performance"}) as GPUAdapter;
         this.m_Device = await this.m_Adapter.requestDevice() as GPUDevice;
         this.m_Context = this.m_Canvas.getContext('webgpu') as unknown as GPUCanvasContext;
-        console.log("xxxxxxxxxxx");
         const devicePixelRatio = window.devicePixelRatio || 1;
         const size = {width: this.m_Canvas.clientWidth * devicePixelRatio, height: this.m_Canvas.clientHeight * devicePixelRatio};
         this.m_Canvas.width = size.width;
