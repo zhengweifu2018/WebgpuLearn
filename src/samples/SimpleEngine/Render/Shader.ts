@@ -2,7 +2,7 @@ export enum EShaderType {
     Vertex = 0, Fragment, Compute
 }
 
-export class CShader {
+export abstract class IShader {
     constructor(source: string, entryPoint: string, type: EShaderType) {
         this.m_Source = source;
         this.m_EntryPoint = entryPoint;
@@ -21,4 +21,4 @@ export class CShader {
     private m_Type: EShaderType;
     private m_Source: string;
     private m_EntryPoint: string;
-}
+} 

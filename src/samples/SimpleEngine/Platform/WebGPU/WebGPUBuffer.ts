@@ -1,7 +1,9 @@
 import { WebGPUApi } from "./WebGPUApi"
-import { CVertexBuffer, CIndexBuffer, CTextureBuffer } from "../../Render/Buffer"
+import { IVertexBuffer, IIndexBuffer, ITexture, IFrameBuffer, CFrameBufferDesc, CTextureDesc, ITextureView, CTextureViewDesc } from "../../Render/Buffer"
+import { GPULoadOpFrom, GPUStoreOpFrom, GPUTextureFormatFrom } from "./WebGPUDataTypesConverter";
+import { ELoadOp, EStoreOp } from "../../Render/DataTypes";
 
-class WebGPUVextexBuffer extends CVertexBuffer {
+export class WebGPUVextexBuffer extends IVertexBuffer {
     constructor(data: Float32Array) {
         super();
         this.m_Buffer = WebGPUApi.Instance.Device.createBuffer({
@@ -28,7 +30,7 @@ class WebGPUVextexBuffer extends CVertexBuffer {
     private m_Buffer : GPUBuffer;
 }
 
-class WebGPUIndexBuffer extends CIndexBuffer {
+export class WebGPUIndexBuffer extends IIndexBuffer {
     constructor(data: Uint32Array, count: number) {
         super();
         this.m_Buffer = WebGPUApi.Instance.Device.createBuffer({
@@ -62,20 +64,114 @@ class WebGPUIndexBuffer extends CIndexBuffer {
     private m_Count : number;
 }
 
-class WebGPUTextureBuffer extends CTextureBuffer {
-    constructor() {
-        super();
+///////////////////////////////////////////////////////////////
+// WebGPUTexture 
+///////////////////////////////////////////////////////////////
+export class WebGPUTexture extends ITexture {
+    private m_Texture : GPUTexture;
+    
+    constructor(desc: CTextureDesc) {
+        super(desc);
+        this.m_Texture = WebGPUApi.Instance.Device.createTexture({
+            size: [desc.Extent.Width, desc.Extent.Height],
+            format: GPUTextureFormatFrom(desc.Format),
+            usage: GPUTextureUsage.RENDER_ATTACHMENT
+        });
     }
 
-    Bind() : void {
-
+    get Texture() {
+        return this.m_Texture;
     }
-
-    Unbind() : void {
-        
-    }
-
-    private m_Buffer : GPUBuffer;
 }
 
-export { WebGPUVextexBuffer, WebGPUIndexBuffer, WebGPUTextureBuffer }
+///////////////////////////////////////////////////////////////
+// WebGPUTextureView 
+///////////////////////////////////////////////////////////////
+export class WebGPUTextureView extends ITextureView {
+    private m_TextureView : GPUTextureView;
+    
+    constructor(desc: CTextureViewDesc) {
+        super(desc);
+
+        //this.m_TextureView = ;
+    }
+
+    get TextureView() {
+        return this.m_TextureView;
+    }
+}
+
+///////////////////////////////////////////////////////////////
+// WebGPUFrameBuffer 
+///////////////////////////////////////////////////////////////
+export class WebGPUFrameBuffer extends IFrameBuffer {
+    private m_RenderPassDesc: GPURenderPassDescriptor;
+    constructor(desc: CFrameBufferDesc) {
+        super(desc);
+        const textureViewDesc = desc.DepthAttachment.TextureView.Descriptor;
+        const depthTexture: GPUTexture = WebGPUApi.Instance.Device.createTexture({
+            size: [
+                textureViewDesc.Extent.Width, 
+                textureViewDesc.Extent.Height, 
+                textureViewDesc.Extent.Depth
+            ],
+            format: GPUTextureFormatFrom(textureViewDesc.Format),
+            usage: GPUTextureUsage.RENDER_ATTACHMENT
+        });
+        const depthTextureView: GPUTextureView = depthTexture.createView();
+
+        this.m_RenderPassDesc = {
+            colorAttachments: this.GetColorAttachments(),
+            depthStencilAttachment: {
+                view: depthTextureView,
+                depthClearValue: desc.DepthAttachment.DepthClearValue,
+                depthLoadOp: GPULoadOpFrom(desc.DepthAttachment.DepthLoadOp),
+                depthStoreOp: GPUStoreOpFrom(desc.DepthAttachment.DepthStoreOp)
+            }
+        };
+    }
+
+    private GetColorAttachments() {
+        if(this.m_FrameBufferDesc.ColorAttachments == undefined) {
+            return [];
+        } else {
+            let attachments: Array<GPURenderPassColorAttachment> = [];
+            for(const attachment of this.m_FrameBufferDesc.ColorAttachments) {
+                let textureView: GPUTextureView;
+                
+                if(attachment.TextureView == undefined) {
+                    textureView = WebGPUApi.Instance.Context.getCurrentTexture().createView();
+                } else {
+                    const texture: GPUTexture = WebGPUApi.Instance.Device.createTexture({
+                        size: [
+                            attachment.TextureView.Descriptor.Extent.Width, 
+                            attachment.TextureView.Descriptor.Extent.Height,
+                            attachment.TextureView.Descriptor.Extent.Depth
+                        ],
+                        format: GPUTextureFormatFrom(attachment.TextureView.Descriptor.Format),
+                        usage: GPUTextureUsage.RENDER_ATTACHMENT
+                    });
+                    
+                    textureView = texture.createView();
+                }
+
+                attachments.push({
+                    view: textureView,
+                    clearValue: {
+                        r: attachment.ClearColor[0], 
+                        g: attachment.ClearColor[1], 
+                        b: attachment.ClearColor[2], 
+                        a: attachment.ClearColor[3]
+                    },
+                    loadOp: GPULoadOpFrom(attachment.LoadOp),
+                    storeOp: GPUStoreOpFrom(attachment.StoreOp)
+                }); 
+            }
+            return attachments;
+        }
+    }
+
+    get RenderPassDesc() {
+        return this.m_RenderPassDesc;
+    }
+}

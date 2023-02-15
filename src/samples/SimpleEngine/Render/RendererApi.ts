@@ -1,20 +1,55 @@
-import { vec4 } from "gl-matrix";
+import { WebGPUFrameBuffer, WebGPUIndexBuffer, WebGPUTextureView, WebGPUVextexBuffer } from "../Platform/WebGPU/WebGPUBuffer";
+import { WebGPUCommandList } from "../Platform/WebGPU/WebGPUCommandList";
+import { WebGPUGraphicsPipeline } from "../Platform/WebGPU/WebGPUGraphicsPipeline";
+import { WebGPUShader } from "../Platform/WebGPU/WebGPUShader";
+import { CFrameBufferDesc, CTextureViewDesc, IFrameBuffer, IIndexBuffer, ITextureView, IVertexBuffer } from "./Buffer";
+import { ICommandList } from "./CommandList";
+import { EGraphicsAPI } from "./DataTypes";
+import { CGraphicsPipelineDesc, IGraphicsPipeline } from "./GraphicsPipeline";
+import { IShader, EShaderType } from "./Shader";
 
-enum ERendererAPI {
-    NONE,
-    WEBGL,
-    WEBGPU
-}
+export abstract class IRendererApi {
+    private s_Api: EGraphicsAPI;
+    private m_Init: boolean = false;
 
-export abstract class CRendererApi {
-    async Init(canvasName: string) {}
-    
-    abstract SetViewport(x : number, y : number, width: number, height: number) : void;
-
-    abstract SetClearColor(color: vec4) : void;
-
-    static get API() {
-        return CRendererApi.s_Api;
+    constructor(api: EGraphicsAPI)
+    {
+        this.s_Api = EGraphicsAPI.WEBGPU;
     }
-    private static s_Api: ERendererAPI
+
+    async Init(canvasName: string) {
+        this.m_Init = true;
+    }
+
+    get API() {
+        return this.s_Api;
+    }
+
+    CreateCommandList() : ICommandList {
+        return new WebGPUCommandList();
+    }
+
+    CreateVertexBuffer(data: Float32Array) : IVertexBuffer {
+        return new WebGPUVextexBuffer(data);
+    }
+
+    CreateIndexBuffer(data: Uint32Array, count: number) : IIndexBuffer {
+        return new WebGPUIndexBuffer(data, count);
+    }
+
+    CreateShader(source: string, entryPoint: string, type: EShaderType): IShader {
+        return new WebGPUShader(source, entryPoint, type);
+    }
+
+    CreateRenderPipeline(desc: CGraphicsPipelineDesc): IGraphicsPipeline {
+        return new WebGPUGraphicsPipeline(desc);
+    }
+
+    CreateTextureView(desc: CTextureViewDesc) : ITextureView {
+        return new WebGPUTextureView(desc)
+    }
+
+    CreateFrameBuffer(desc: CFrameBufferDesc) : IFrameBuffer {
+        return new WebGPUFrameBuffer(desc);
+    }
 }
