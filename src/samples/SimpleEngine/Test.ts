@@ -14,34 +14,15 @@ import { ICommandList } from "./Render/CommandList";
 import { vec4 } from "gl-matrix";
 import { IRenderPass } from "./Render/RenderPass";
 import { CGraphicsState } from "./Render/States/GraphicsState";
+import{ ShaderPreprocessor } from "./Platform/WebGPU/WebGPUPreprocessor"
 
-const VertexShader: string = `
-struct VSData {
-    @builtin(position) vPosition : vec4<f32>,
-    @location(1) vColor : vec3<f32>,
-};
+import VertexShader from "./Platform/WebGPU/Shaders/BasicVertex.wgsl?raw";
+import FragmentShader from "./Platform/WebGPU/Shaders/LambertShader.wgsl?raw";
 
-@vertex
-fn main(
-    @location(0) pos : vec3<f32>,
-    @location(1) col : vec3<f32>) -> VSData {
-    var vsData: VSData;
-    vsData.vPosition = vec4<f32>(pos, 1.0);
-    vsData.vColor = col;
-    return vsData;
-}
-`;
 
-const FragmentShader: string = `
-struct SInput {
-    //@location(0) vPosition : vec4<f32>,
-    @location(1) vColor : vec3<f32>,
-};
-@fragment
-fn main(input: SInput) -> @location(0) vec4<f32> {
-    return vec4<f32>(input.vColor, 1.0);
-}
-`;
+// export const Test = (canvaseName: string) => {
+//     console.log(ShaderPreprocessor('#define USE_VERTEX_COLOR 0\n' + VertexShader));
+// }
 
 export const Test = async (canvaseName: string) => {
     let scene = new CScene();
@@ -99,11 +80,17 @@ export const Test = async (canvaseName: string) => {
     //     0, 1, 2, 2, 3, 0
     // ]);
 
+
     const vertexBuffer: IVertexBuffer = rendererApi.CreateVertexBuffer(vertexData);
     const indexBuffer : IIndexBuffer = rendererApi.CreateIndexBuffer(indexData, indexData.length);
 
-    const vShader: IShader = rendererApi.CreateShader(VertexShader, "main", EShaderType.Vertex);
-    const pShader: IShader = rendererApi.CreateShader(FragmentShader, "main", EShaderType.Fragment);
+    const defineStr = '#define USE_VERTEX_COLOR 1\n';
+
+    const vertexShaderCode = ShaderPreprocessor(`${defineStr}${VertexShader}`);
+    const fragmentShaderCode = ShaderPreprocessor(`${defineStr}${FragmentShader}`);
+    console.log(vertexShaderCode);
+    const vShader: IShader = rendererApi.CreateShader(vertexShaderCode, "main", EShaderType.Vertex);
+    const pShader: IShader = rendererApi.CreateShader(fragmentShaderCode, "main", EShaderType.Fragment);
     
     let renderState: CRenderState = {
         RasterState: {
