@@ -9,9 +9,9 @@ struct SInput {
 
 struct SOutput {
     @builtin(position) Position : vec4<f32>,
-    @location(1) vPos : vec3<f32>,
-    @location(2) vNormal : vec3<f32>,
-    @location(3) vUV : vec2<f32>,
+    @location(0) vPos : vec3<f32>,
+    @location(1) vNormal : vec3<f32>,
+    @location(2) vUV : vec2<f32>,
 };
 
 @vertex
