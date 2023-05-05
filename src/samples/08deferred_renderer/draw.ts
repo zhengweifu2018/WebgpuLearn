@@ -14,7 +14,7 @@ import deferredFragmentShader from "./deferred_fragment.wgsl?raw";
 // 设置实例的个数
 const NUM_INSTANCES = 1;
 
- const Meshes = [{
+const GMeshes = [{
     geo: DragonGeometry, 
     position: {x:0, y:0, z:0}, 
     rotation: {x:0, y:0, z:0}, 
@@ -26,13 +26,69 @@ const NUM_INSTANCES = 1;
     scale: {x:1, y:1, z:1}
 }];
 
+let GVertexBuffers : Array<GPUBuffer>;
+let GIndexBuffers: Array<GPUBuffer>;
+
+//  创建 VB 和 IB
+const CreateVBAndIB = (device: GPUDevice) => {
+    for(let i = 0; i < GMeshes.length; i++) {
+        const mesh = GMeshes[i];
+        const indexBuffer: GPUBuffer = CreateIndexBuffer(device, mesh.geo.Triangles, GPUBufferUsage.INDEX);
+        const vertexBuffer: GPUBuffer = CreateVertexBuffer(device, mesh.geo.GetBufferArray(), GPUBufferUsage.VERTEX);
+        GVertexBuffers.push(vertexBuffer);
+        GIndexBuffers.push(indexBuffer);
+    }
+}
+
+const CreateGBufferPassRenderDatas = (device: GPUDevice) => {
+    for(let i = 0; i < GMeshes.length; i++) {
+        const mesh = GMeshes[i];
+        const pipeline: GPURenderPipeline = device.createRenderPipeline({
+            layout: "auto",
+            vertex: {
+                module: device.createShaderModule({
+                    code: commonVertexShader
+                }),
+                entryPoint: "main",
+                buffers: [{
+                    arrayStride: mesh.geo.GetNumStrides(),
+                    attributes: mesh.geo.GetAttributes() as GPUVertexAttribute[]
+                }]
+            },
+            fragment: {
+                module: device.createShaderModule({
+                    code: gBufferFragmentShader
+                }),
+                entryPoint: "main",
+                targets: [{
+                    format: "bgra8unorm" // albedo
+                }, {
+                    format: "rgba32float" // position
+                }, {
+                    format: "rgba16float" // normal
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "back"
+            },
+            depthStencil:{ // 深度模板
+                format: "depth24plus",
+                depthWriteEnabled: true,
+                depthCompare: "less"
+            }
+        });
+    }
+}
+
+
 const CreateRenderDatas = (
     device: GPUDevice,
     format: GPUTextureFormat
 ) => {
     let renderDatas = [];
-    for(let i = 0; i < Meshes.length; i++) {
-        const mesh = Meshes[i];
+    for(let i = 0; i < GMeshes.length; i++) {
+        const mesh = GMeshes[i];
         
         const vertexBuffer: GPUBuffer = CreateVertexBuffer(device, mesh.geo.GetBufferArray(), GPUBufferUsage.VERTEX);
         // console.log(mesh.geo.GetBufferArray());
@@ -143,7 +199,7 @@ export const DeferredRenderer = async (canvasName: string) => {
     const cameraFarClip: number = 1000.0;
 
     let camera = createCamera(canvas, {
-        eye: [0, 100, 300],
+        eye: [0, 200, 100],
         center: [0, 0, 0],
         zoomMax: 500
     });
@@ -170,7 +226,7 @@ export const DeferredRenderer = async (canvasName: string) => {
     let positionTextureView = positionTexture.createView();
     let normalTextureView = normalTexture.createView();
 
-    // create gbuffer group
+    // 创建 GBufferTextures 绑定组布局
     const gBufferTexturesBindGroupLayout = device.createBindGroupLayout({
         entries: [{
             binding: 0,
@@ -192,53 +248,8 @@ export const DeferredRenderer = async (canvasName: string) => {
             }
         }],
     });
-    const gBufferTexturesBindGroup = device.createBindGroup({
-        layout: gBufferTexturesBindGroupLayout,
-        entries: [{
-            binding: 0,
-            resource: albedoTextureView
-        }, {
-            binding: 1,
-            resource: positionTextureView
-        }, {
-            binding: 2,
-            resource: normalTextureView
-        }]
-      });
 
-    // GBuffer 
-    const gbufferPassDescriptor: GPURenderPassDescriptor = {
-        colorAttachments: [{
-            view: albedoTextureView,
-            clearValue: {
-                r: 0, g: 0, b: 0.0, a: 1.0
-            },
-            loadOp: 'clear',
-            storeOp: 'store'
-        }, {
-            view: positionTextureView,
-            clearValue: {
-                r: Number.MAX_VALUE, g: Number.MAX_VALUE, b: Number.MAX_VALUE, a: 1.0
-            },
-            loadOp: 'clear',
-            storeOp: 'store'
-        }, {
-            view: normalTextureView,
-            clearValue: {
-                r: 0, g: 0, b: 1.0, a: 1.0
-            },
-            loadOp: 'clear',
-            storeOp: 'store'
-        }],
-        depthStencilAttachment: {
-            view: depthView,
-            depthClearValue: 1.0,
-            depthLoadOp: 'clear',
-            depthStoreOp: "store"
-        }
-    };
-
-    // TextureQuad
+    // 创建 DeferredRenderer 渲染管线
     const deferredRenderPipeline = device.createRenderPipeline({
         layout: device.createPipelineLayout({
             bindGroupLayouts: [
@@ -270,17 +281,6 @@ export const DeferredRenderer = async (canvasName: string) => {
         },
     });
     
-
-    const textureView: GPUTextureView = context.getCurrentTexture().createView();
-    const textureQuadPassDescriptor: GPURenderPassDescriptor = {
-        colorAttachments: [{
-            view: textureView,
-            clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-            loadOp: 'clear',
-            storeOp: 'store',
-        }],
-    };
-
     function renderLoop() {
         stats.begin();
 
@@ -298,6 +298,36 @@ export const DeferredRenderer = async (canvasName: string) => {
         const commandEncoder: GPUCommandEncoder = device.createCommandEncoder();
     
         { // gbuffer rendering
+            const gbufferPassDescriptor: GPURenderPassDescriptor = {
+                colorAttachments: [{
+                    view: albedoTextureView,
+                    clearValue: {
+                        r: 0, g: 0, b: 0.0, a: 1.0
+                    },
+                    loadOp: 'clear',
+                    storeOp: 'store'
+                }, {
+                    view: positionTextureView,
+                    clearValue: {
+                        r: Number.MAX_VALUE, g: Number.MAX_VALUE, b: Number.MAX_VALUE, a: 1.0
+                    },
+                    loadOp: 'clear',
+                    storeOp: 'store'
+                }, {
+                    view: normalTextureView,
+                    clearValue: {
+                        r: 0, g: 0, b: 1.0, a: 1.0
+                    },
+                    loadOp: 'clear',
+                    storeOp: 'store'
+                }],
+                depthStencilAttachment: {
+                    view: depthView,
+                    depthClearValue: 1.0,
+                    depthLoadOp: 'clear',
+                    depthStoreOp: "store"
+                }
+            };
             // 创建 GBuffer RenderPass
             const gbufferPass: GPURenderPassEncoder = commandEncoder.beginRenderPass(gbufferPassDescriptor);
     
@@ -328,12 +358,33 @@ export const DeferredRenderer = async (canvasName: string) => {
             }
             gbufferPass.end();
         }
-    
+        // 创建 GBufferTextures 绑定组
+        const gBufferTexturesBindGroup = device.createBindGroup({
+            layout: gBufferTexturesBindGroupLayout,
+            entries: [{
+                binding: 0,
+                resource: albedoTextureView
+            }, {
+                binding: 1,
+                resource: positionTextureView
+            }, {
+                binding: 2,
+                resource: normalTextureView
+            }]
+        });
         { // light rendering
             // todo ...    
         }
     
         { // deferred rendering
+            const textureQuadPassDescriptor: GPURenderPassDescriptor = {
+                colorAttachments: [{
+                    view: context.getCurrentTexture().createView(),
+                    clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                }],
+            };
             const deferredPass: GPURenderPassEncoder = commandEncoder.beginRenderPass(textureQuadPassDescriptor);
             deferredPass.setPipeline(deferredRenderPipeline);
             deferredPass.setBindGroup(0, gBufferTexturesBindGroup);
@@ -344,13 +395,14 @@ export const DeferredRenderer = async (canvasName: string) => {
         device.queue.submit([commandEncoder.finish()]);        
 
         stats.end();
-        console.log("running....");
         requestAnimationFrame(renderLoop);
     }
 
     renderLoop();
 
     window.addEventListener('resize', () => { 
+        //if(canvas.width === size.width && canvas.height === size.height) return;
+
         size.width = canvas.width = canvas.clientWidth * devicePixelRatio;
         size.height = canvas.height = canvas.clientHeight * devicePixelRatio;
         
@@ -359,11 +411,14 @@ export const DeferredRenderer = async (canvasName: string) => {
         albedoTexture.destroy();
         positionTexture.destroy();
         normalTexture.destroy();
-        CreateGBufferTexture(device, size.width, size.width);
+        const gbufferTextures = CreateGBufferTexture(device, size.width, size.height);
+        albedoTexture = gbufferTextures.albedoTexture;
+        positionTexture = gbufferTextures.positionTexture;
+        normalTexture = gbufferTextures.normalTexture;
         albedoTextureView = albedoTexture.createView();
         positionTextureView = positionTexture.createView();
         normalTextureView = normalTexture.createView();
-        
+ 
         depthTexture.destroy();
         depthTexture = device.createTexture({
             size: [size.width, size.height, 1],
