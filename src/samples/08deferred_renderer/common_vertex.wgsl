@@ -1,4 +1,14 @@
-@group(0) @binding(0) var<storage, read> mvpMatrix : array<mat4x4<f32>>;
+struct FView {
+    worldMatrix : mat4x4<f32>,
+    viewMatrix : mat4x4<f32>,
+    projectionMatrix : mat4x4<f32>,
+};
+
+@group(0) @binding(0) var<storage, read> View : FView;
+
+// @group(0) @binding(0) var<storage, read> worldMatrix : mat4x4<f32>;
+// @group(0) @binding(1) var<storage, read> vpMatrix : mat4x4<f32>;
+
 
 struct SInput {
     @builtin(instance_index) index : u32,
@@ -17,7 +27,7 @@ struct SOutput {
 @vertex
 fn main(input: SInput) -> SOutput {
     var output: SOutput;
-    output.Position = mvpMatrix[input.index] * vec4<f32>(input.pos, 1.0f);
+    output.Position = View.projectionMatrix * View.viewMatrix * View.worldMatrix * vec4<f32>(input.pos, 1.0f);
     output.vPos = input.pos;
     output.vNormal = input.normal;
     output.vUV = input.uv;

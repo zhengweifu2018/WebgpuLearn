@@ -26,24 +26,21 @@ const GMeshes = [{
     scale: {x:1, y:1, z:1}
 }];
 
-let GVertexBuffers : Array<GPUBuffer>;
-let GIndexBuffers: Array<GPUBuffer>;
-
-//  创建 VB 和 IB
-const CreateVBAndIB = (device: GPUDevice) => {
-    for(let i = 0; i < GMeshes.length; i++) {
-        const mesh = GMeshes[i];
-        const indexBuffer: GPUBuffer = CreateIndexBuffer(device, mesh.geo.Triangles, GPUBufferUsage.INDEX);
-        const vertexBuffer: GPUBuffer = CreateVertexBuffer(device, mesh.geo.GetBufferArray(), GPUBufferUsage.VERTEX);
-        GVertexBuffers.push(vertexBuffer);
-        GIndexBuffers.push(indexBuffer);
-    }
+interface RenderObject {
+    VertexBuffer: GPUBuffer;
+    IndexBuffer: GPUBuffer;
+    WorldMatrix: mat4;
+    RenderPipeline: GPURenderPipeline;
 }
 
-const CreateGBufferPassRenderDatas = (device: GPUDevice) => {
+const CreateRenderObjects = (device: GPUDevice) : Array<RenderObject> => {
+    let RenderObjects: Array<RenderObject> = [];
     for(let i = 0; i < GMeshes.length; i++) {
         const mesh = GMeshes[i];
-        const pipeline: GPURenderPipeline = device.createRenderPipeline({
+
+        const indexBuffer: GPUBuffer = CreateIndexBuffer(device, mesh.geo.Triangles, GPUBufferUsage.INDEX);
+        const vertexBuffer: GPUBuffer = CreateVertexBuffer(device, mesh.geo.GetBufferArray(), GPUBufferUsage.VERTEX);
+        const renderPipeline: GPURenderPipeline = device.createRenderPipeline({
             layout: "auto",
             vertex: {
                 module: device.createShaderModule({
@@ -78,90 +75,25 @@ const CreateGBufferPassRenderDatas = (device: GPUDevice) => {
                 depthCompare: "less"
             }
         });
-    }
-}
-
-
-const CreateRenderDatas = (
-    device: GPUDevice,
-    format: GPUTextureFormat
-) => {
-    let renderDatas = [];
-    for(let i = 0; i < GMeshes.length; i++) {
-        const mesh = GMeshes[i];
-        
-        const vertexBuffer: GPUBuffer = CreateVertexBuffer(device, mesh.geo.GetBufferArray(), GPUBufferUsage.VERTEX);
-        // console.log(mesh.geo.GetBufferArray());
-        const pipeline: GPURenderPipeline = device.createRenderPipeline({
-            layout: "auto",
-            vertex: {
-                module: device.createShaderModule({
-                    code: commonVertexShader
-                }),
-                entryPoint: "main",
-                buffers: [{
-                    arrayStride: mesh.geo.GetNumStrides(),
-                    attributes: mesh.geo.GetAttributes() as GPUVertexAttribute[]
-                }]
-            },
-            fragment: {
-                module: device.createShaderModule({
-                    code: gBufferFragmentShader
-                }),
-                entryPoint: "main",
-                targets: [{
-                    format: "bgra8unorm" // albedo
-                }, {
-                    format: "rgba32float" // position
-                }, {
-                    format: "rgba16float" // normal
-                }]
-            },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "back"
-            },
-            depthStencil:{ // 深度模板
-                format: "depth24plus",
-                depthWriteEnabled: true,
-                depthCompare: "less"
-            }
-        });
-
-        // 创建IndexBuffer并设置到RenderPass中
-        const indexBuffer: GPUBuffer = CreateIndexBuffer(device, mesh.geo.Triangles, GPUBufferUsage.INDEX);
 
         // 模型矩阵
-        const modelMatrix: mat4 = mat4.create();
+        const worldMatrix: mat4 = mat4.create();
 
         // 更新模型矩阵
-        mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(mesh.position.x, mesh.position.y, mesh.position.z));
-        mat4.rotateX(modelMatrix, modelMatrix, mesh.rotation.x);
-        mat4.rotateY(modelMatrix, modelMatrix, mesh.rotation.y);
-        mat4.rotateZ(modelMatrix, modelMatrix, mesh.rotation.z);
-        mat4.scale(modelMatrix, modelMatrix, vec3.fromValues(mesh.scale.x, mesh.scale.y, mesh.scale.z));
+        mat4.translate(worldMatrix, worldMatrix, vec3.fromValues(mesh.position.x, mesh.position.y, mesh.position.z));
+        mat4.rotateX(worldMatrix, worldMatrix, mesh.rotation.x);
+        mat4.rotateY(worldMatrix, worldMatrix, mesh.rotation.y);
+        mat4.rotateZ(worldMatrix, worldMatrix, mesh.rotation.z);
+        mat4.scale(worldMatrix, worldMatrix, vec3.fromValues(mesh.scale.x, mesh.scale.y, mesh.scale.z));
 
-        const mvpBuffer: GPUBuffer = device.createBuffer({
-            size: 64,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        RenderObjects.push({
+            VertexBuffer: vertexBuffer,
+            IndexBuffer: indexBuffer,
+            WorldMatrix: worldMatrix,
+            RenderPipeline: renderPipeline
         });
-
-        const mvpBindGroup: GPUBindGroup = device.createBindGroup({
-            layout: pipeline.getBindGroupLayout(0),
-            entries: [{
-                binding: 0,
-                resource: {
-                    buffer: mvpBuffer,
-                    offset: 0,
-                    size: 64
-                }
-            }]
-        });
-
-        renderDatas.push({vertexBuffer, indexBuffer, pipeline, mvpBuffer, mvpBindGroup, modelMatrix});
     }
-
-    return renderDatas;
+    return RenderObjects;
 }
 
 // 创建 GBuffer Texture
@@ -189,8 +121,8 @@ const CreateGBufferTexture = (device: GPUDevice, width: number, height: number) 
 
 export const DeferredRenderer = async (canvasName: string) => { 
     const { device, context, size, format, canvas } = await InitGPU(canvasName);
-  
-    let renderDatas = CreateRenderDatas(device, format);
+
+    const renderObjects = CreateRenderObjects(device);
 
     // 创建相机
     let cameraRatio : number = size.width / size.height;
@@ -219,6 +151,12 @@ export const DeferredRenderer = async (canvasName: string) => {
 
     // 相机矩阵
     let viewMatrix: mat4 = camera.matrix;
+
+    // 视口缓冲区，包含 worldMatrix, viewMatrix, projectionMatrix
+    const viewBuffer: GPUBuffer = device.createBuffer({
+        size: 64 * 3,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+    });
 
     // 创建 GBuffer TextureView
     let { albedoTexture, positionTexture, normalTexture } = CreateGBufferTexture(device, size.width, size.height);
@@ -292,11 +230,8 @@ export const DeferredRenderer = async (canvasName: string) => {
             viewMatrix = camera.matrix;
         }
 
-        let viewProjectionMatrix: mat4 = mat4.create();
-        mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
-        
         const commandEncoder: GPUCommandEncoder = device.createCommandEncoder();
-    
+
         { // gbuffer rendering
             const gbufferPassDescriptor: GPURenderPassDescriptor = {
                 colorAttachments: [{
@@ -330,31 +265,43 @@ export const DeferredRenderer = async (canvasName: string) => {
             };
             // 创建 GBuffer RenderPass
             const gbufferPass: GPURenderPassEncoder = commandEncoder.beginRenderPass(gbufferPassDescriptor);
-    
-            for (let i = 0; i < renderDatas.length; i++)
+            
+            const viewBufferValues = new Float32Array(viewBuffer.size / 4);
+            
+            for (let i = 0; i < renderObjects.length; i++)
             {
-                const { pipeline, vertexBuffer, indexBuffer, mvpBuffer, mvpBindGroup, modelMatrix } = renderDatas[i];
-    
-                // mvp矩阵
-                let mvpMatrix: mat4 = mat4.create();
-                            
-                // 更新mvp矩阵
-                mat4.multiply(mvpMatrix, viewProjectionMatrix, modelMatrix);
-    
-                // mvp uniform buffer 传给 gpu
-                device.queue.writeBuffer(mvpBuffer, 0, mvpMatrix as Float32Array);
-    
+                const renderObject = renderObjects[i]; 
                 
-                gbufferPass.setPipeline(pipeline);
+                // 更新视口缓冲区数据
+                viewBufferValues.set(renderObject.WorldMatrix as Float32Array, 0*16);
+                viewBufferValues.set(viewMatrix as Float32Array, 1*16);
+                viewBufferValues.set(projectionMatrix as Float32Array, 2*16);
+
+                const renderObjectMatrixBindGroup: GPUBindGroup = device.createBindGroup({
+                    layout: renderObject.RenderPipeline.getBindGroupLayout(0),
+                    entries: [{
+                        binding: 0,
+                        resource: {
+                            buffer: viewBuffer,
+                            offset: 0,
+                            size: viewBuffer.size
+                        }
+                    }]
+                });
+                
+                // 视口缓冲区数据 传给 gpu
+                device.queue.writeBuffer(viewBuffer, 0, viewBufferValues);
+                
+                gbufferPass.setPipeline(renderObject.RenderPipeline);
     
-                gbufferPass.setVertexBuffer(0, vertexBuffer);
+                gbufferPass.setVertexBuffer(0, renderObject.VertexBuffer);
                 
                 // 设置IndexBuffer到RenderPass中
-                gbufferPass.setIndexBuffer(indexBuffer, "uint32");
+                gbufferPass.setIndexBuffer(renderObject.IndexBuffer, "uint32");
     
-                gbufferPass.setBindGroup(0, mvpBindGroup);
+                gbufferPass.setBindGroup(0, renderObjectMatrixBindGroup);
     
-                gbufferPass.drawIndexed(indexBuffer.size / 4, NUM_INSTANCES, 0, 0, 0);
+                gbufferPass.drawIndexed(renderObject.IndexBuffer.size / 4, NUM_INSTANCES, 0, 0, 0);
             }
             gbufferPass.end();
         }
@@ -372,6 +319,7 @@ export const DeferredRenderer = async (canvasName: string) => {
                 resource: normalTextureView
             }]
         });
+
         { // light rendering
             // todo ...    
         }
