@@ -11,6 +11,7 @@ import { CreateCubeInstances } from "../samples/05cube_instances/draw";
 import { CreateCameraControls } from "../samples/06camera_controls/draw";
 import { CreateBasicComputePipeline } from "../samples/07basic_compute_pipeline/draw";
 import { DeferredRenderer } from "../samples/08deferred_renderer/draw";
+import { LightRenderer } from "../samples/09light/draw";
 
 import { Draw } from "../samples/99simple_frame/draw";
 import { Test } from "../samples/SimpleEngine/Test";
@@ -25,6 +26,7 @@ const SimpleName2Func = new Map<string, Function>([
     ["06camera_controls", CreateCameraControls],
     ["07basic_compute_pipeline", CreateBasicComputePipeline],
     ["08deferred_renderer", DeferredRenderer],
+    ["09light", LightRenderer],
     ["99simple_frame", Draw],
     ["SimpleEngine", Test]
 ]);

@@ -1,7 +1,9 @@
 import { CGeometryBuffer } from "./GeometryBuffer";
+import { vec3, quat} from "gl-matrix";
 
-export class CMesh {
-    Geometry: CGeometryBuffer;
-    Position: {x: 0, y: 0, z: 0};
-    Rotation: {x: 1, y: 0, z: 0};
+export interface CMesh {
+    Geometry : CGeometryBuffer;
+    Position : vec3;
+    Rotation : vec3;
+    Scale : vec3;
 }
