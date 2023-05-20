@@ -2,9 +2,8 @@ import { CMesh } from "../../meshes/Mesh";
 
 const createCamera = require("3d-view-controls");
 
-import mainVertexShader from "./shaders/main_vertex.wgsl?raw";
-import shadowVertexShader from "./shaders/shadow_vertex.wgsl?raw";
-import mainFragmentShader from "./shaders/main_fragment.wgsl?raw";
+import mainShader from "./shaders/main.wgsl?raw";
+import shadowShader from "./shaders/shadow.wgsl?raw";
 
 import { vec3, mat4 } from "gl-matrix";
 
@@ -50,9 +49,14 @@ class LightData {
     public Position: vec3 = vec3.create();
     public Target: vec3 = vec3.create();
     public Color: vec3 = vec3.create();
+    public ShadowBias: number = 0;
 
     private getLength() : number {
-        return this.ViewProjectionMatrix.length + this.Position.length + this.Target.length + this.Color.length + 3;
+        return this.ViewProjectionMatrix.length 
+            + this.Position.length 
+            + this.Target.length 
+            + this.Color.length 
+            + 3;
     }
 
     public GetSize() : number {
@@ -73,6 +77,9 @@ class LightData {
         offset += this.Target.length;
         data.set(this.Color as Float32Array, offset);
 
+        offset += this.Color.length;
+        data[offset] = this.ShadowBias;
+
         return data;
     }
 }
@@ -82,8 +89,9 @@ export interface DirectionalLight {
     Target: vec3;
     Color: vec3;
     ShadowMapSize: number;
-    ShadowNear: number;
-    ShadowFar: number;
+    ShadowRadius: number;
+    ShadowDistance: number;
+    ShadowBias: number;
 }
 
 export class Renderer {
@@ -110,6 +118,7 @@ export class Renderer {
 
 
     private m_shadowDepthTexture: GPUTexture;
+    private m_shadowDepthTextureView: GPUTextureView;
     private m_mainDepthTexture: GPUTexture;
 
     private m_shadowBindGroupLayout: GPUBindGroupLayout;
@@ -188,21 +197,23 @@ export class Renderer {
         this.m_lightData.Position = this.m_directionalLight.Position;
         this.m_lightData.Target = this.m_directionalLight.Target;
         this.m_lightData.Color = this.m_directionalLight.Color;
-
+        this.m_lightData.ShadowBias = this.m_directionalLight.ShadowBias;
         const upVector: vec3 = vec3.fromValues(0,1,0);
         let lightViewMatrix = mat4.create();
+
+        // gl-matrix mat4.lookAt 得到的是 WorldToCameraMatrix, 这里就不需要再进行反转相机矩阵了。
         mat4.lookAt(lightViewMatrix, this.m_lightData.Position, this.m_lightData.Target, upVector);
-        mat4.invert(lightViewMatrix, lightViewMatrix);
         
         const lightProjectionMatrix = mat4.create();
         {
-            const left = -80;
-            const right = 80;
-            const bottom = -80;
-            const top = 80;
-            const near = -200;
-            const far = 300;
-            mat4.ortho(lightProjectionMatrix, left, right, bottom, top, near, far);
+            const shadowDistance = this.m_directionalLight.ShadowRadius;
+            const left = -shadowDistance;
+            const right = shadowDistance;
+            const bottom = -shadowDistance;
+            const top = shadowDistance;
+            const near = 0;
+            const far = this.m_directionalLight.ShadowDistance;
+            mat4.orthoZO(lightProjectionMatrix, left, right, bottom, top, near, far);
         }
         
         mat4.multiply(this.m_lightData.ViewProjectionMatrix, lightProjectionMatrix, lightViewMatrix);
@@ -310,9 +321,11 @@ export class Renderer {
     private createTextures() {
         this.m_shadowDepthTexture = this.m_device.createTexture({
             size: [this.m_directionalLight.ShadowMapSize, this.m_directionalLight.ShadowMapSize, 1],
-            format: "depth24plus",
+            format: "depth32float",
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
         });
+
+        this.m_shadowDepthTextureView = this.m_shadowDepthTexture.createView();
 
         this.m_mainDepthTexture = this.m_device.createTexture({
             size: [this.m_width, this.m_height, 1],
@@ -377,9 +390,21 @@ export class Renderer {
                 }
             }, {
                 binding: 2,
-                visibility: GPUShaderStage.FRAGMENT,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                 buffer: {
                     type: "uniform"
+                }
+            }, {
+                binding: 3,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                texture: {
+                    sampleType: "depth"
+                }
+            }, {
+                binding: 4,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                sampler: {
+                    type: "comparison"
                 }
             }]
         });
@@ -417,6 +442,14 @@ export class Renderer {
                 resource: {
                     buffer: this.m_lightBuffer
                 }
+            }, {
+                binding: 3,
+                resource: this.m_shadowDepthTextureView
+            }, {
+                binding: 4,
+                resource: this.m_device.createSampler({
+                    compare: "less"
+                })
             }]
         });
     }
@@ -432,20 +465,31 @@ export class Renderer {
                 layout: shadowPipelineLayout,
                 vertex: {
                     module: this.m_device.createShaderModule({
-                        code: shadowVertexShader
+                        code: shadowShader
                     }),
-                    entryPoint: "main",
+                    entryPoint: "vs_main",
                     buffers: [{
                         arrayStride: this.m_meshes[i].Geometry.GetNumStrides(),
                         attributes: this.m_meshes[i].Geometry.GetAttributes() as GPUVertexAttribute[]
                     }]
                 },
+                // // shadow debug begin
+                // fragment: {
+                //     module: this.m_device.createShaderModule({
+                //         code: shadowShader
+                //     }),
+                //     entryPoint: "fs_main",
+                //     targets: [{
+                //         format: this.m_format
+                //     }]
+                // },
+                // // shadow debug end
                 primitive: {
                     topology: "triangle-list",
                     cullMode: "back"
                 },
                 depthStencil:{ // 深度模板
-                    format: "depth24plus",
+                    format: "depth32float",
                     depthWriteEnabled: true,
                     depthCompare: "less"
                 }
@@ -459,9 +503,9 @@ export class Renderer {
                 layout: mainPipelineLayout,
                 vertex: {
                     module: this.m_device.createShaderModule({
-                        code: mainVertexShader
+                        code: mainShader
                     }),
-                    entryPoint: "main",
+                    entryPoint: "vs_main",
                     buffers: [{
                         arrayStride: this.m_meshes[i].Geometry.GetNumStrides(),
                         attributes: this.m_meshes[i].Geometry.GetAttributes() as GPUVertexAttribute[]
@@ -469,9 +513,9 @@ export class Renderer {
                 },
                 fragment: {
                     module: this.m_device.createShaderModule({
-                        code: mainFragmentShader
+                        code: mainShader
                     }),
-                    entryPoint: "main",
+                    entryPoint: "fs_main",
                     targets: [{
                         format: this.m_format
                     }]
@@ -505,8 +549,16 @@ export class Renderer {
         {
             const shadowPassDescriptor: GPURenderPassDescriptor = {
                 colorAttachments: [],
+                // // shadow debug begin
+                // colorAttachments: [{
+                //     view: this.m_context.getCurrentTexture().createView(),
+                //     clearValue: { r: 0.3, g: 0.3, b: 0.7, a: 1.0 },
+                //     loadOp: 'clear',
+                //     storeOp: 'store',
+                // }],
+                // // shadow debug end
                 depthStencilAttachment: {
-                    view: this.m_shadowDepthTexture.createView(),
+                    view: this.m_shadowDepthTextureView,//this.m_shadowDepthTexture.createView(),
                     depthClearValue: 1.0,
                     depthLoadOp: 'clear',
                     depthStoreOp: 'store'
@@ -536,7 +588,7 @@ export class Renderer {
             const mainPassDescriptor: GPURenderPassDescriptor = {
                 colorAttachments: [{
                     view: this.m_context.getCurrentTexture().createView(),
-                    clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+                    clearValue: { r: 0.3, g: 0.3, b: 0.7, a: 1.0 },
                     loadOp: 'clear',
                     storeOp: 'store',
                 }],

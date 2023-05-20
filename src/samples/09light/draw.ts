@@ -19,12 +19,13 @@ export const LightRenderer = async (canvasName: string) => {
     }];
 
     const light : DirectionalLight = {
-        Position : vec3.fromValues(0, 50, 0),
+        Position : vec3.fromValues(200, 200, 200),
         Target : vec3.fromValues(0, 0, 0),
         Color : vec3.fromValues(1, 1, 0),
         ShadowMapSize : 1024,
-        ShadowNear: -200,
-        ShadowFar: 500
+        ShadowRadius : 200,
+        ShadowDistance: 3000,
+        ShadowBias: 0.0007
     }
 
     const canvas = document.getElementById(canvasName) as HTMLCanvasElement;
