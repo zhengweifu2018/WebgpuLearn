@@ -5,7 +5,7 @@ import { CMesh } from "../../meshes/Mesh";
 import { DirectionalLight, Renderer } from "./Renderer";
 import { vec3 } from "gl-matrix";
 
-export const LightRenderer = async (canvasName: string) => {
+export const SimpleDirectionalLightRenderer = async (canvasName: string) => {
     const meshes : Array<CMesh> = [{
         Geometry: DragonGeometry,
         Position: vec3.fromValues(0, 0, 0),
