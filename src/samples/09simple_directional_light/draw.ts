@@ -25,7 +25,8 @@ export const SimpleDirectionalLightRenderer = async (canvasName: string) => {
         ShadowMapSize : 1024,
         ShadowRadius : 200,
         ShadowDistance: 3000,
-        ShadowBias: 0.0007
+        ShadowBias: 0.001,
+        ShadowSamples: 16,
     }
 
     const canvas = document.getElementById(canvasName) as HTMLCanvasElement;

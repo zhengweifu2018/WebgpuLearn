@@ -50,6 +50,7 @@ class LightData {
     public Target: vec3 = vec3.create();
     public Color: vec3 = vec3.create();
     public ShadowBias: number = 0;
+    public ShadowSamples: number = 1;
 
     private getLength() : number {
         return this.ViewProjectionMatrix.length 
@@ -80,6 +81,9 @@ class LightData {
         offset += this.Color.length;
         data[offset] = this.ShadowBias;
 
+        offset += 1;
+        data[offset] = this.ShadowSamples;
+
         return data;
     }
 }
@@ -92,6 +96,7 @@ export interface DirectionalLight {
     ShadowRadius: number;
     ShadowDistance: number;
     ShadowBias: number;
+    ShadowSamples: number; // 值为 1, 2, 4, 9, 16
 }
 
 export class Renderer {
@@ -198,6 +203,7 @@ export class Renderer {
         this.m_lightData.Target = this.m_directionalLight.Target;
         this.m_lightData.Color = this.m_directionalLight.Color;
         this.m_lightData.ShadowBias = this.m_directionalLight.ShadowBias;
+        this.m_lightData.ShadowSamples = this.m_directionalLight.ShadowSamples;
         const upVector: vec3 = vec3.fromValues(0,1,0);
         let lightViewMatrix = mat4.create();
 

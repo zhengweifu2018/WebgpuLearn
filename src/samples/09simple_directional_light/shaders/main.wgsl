@@ -7,7 +7,7 @@ struct FLightData {
     viewProjectionMatrix: mat4x4<f32>,
     positionXYZ_targetX: vec4<f32>,
     targetYZ_colorRG: vec4<f32>,
-    colorB_Bias_padding: vec4<f32>,
+    colorB_Bias_samples_padding: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> ViewData : FViewData;
@@ -58,7 +58,7 @@ fn getLightTarget() -> vec3<f32> {
 }
 
 fn getLightColor() -> vec3<f32> {
-    return vec3<f32>(LightData.targetYZ_colorRG.zw, LightData.colorB_Bias_padding.x);
+    return vec3<f32>(LightData.targetYZ_colorRG.zw, LightData.colorB_Bias_samples_padding.x);
 }
 
 @fragment
@@ -66,14 +66,70 @@ fn fs_main(input: VOutput) -> @location(0) vec4<f32> {
     var outColor: vec3<f32> = vec3<f32>(0, 0, 0);
 
     let lightDir: vec3<f32> = normalize(getLightPosition() - getLightTarget());
-    let ambient : f32 = 0.2;
-    let lightIntensity = ambient + max(0, dot(lightDir, input.vNormal));
+    let ambient : f32 = 0.3;
+    let lightIntensity = max(0, dot(lightDir, input.vNormal));
 
-    let bias = LightData.colorB_Bias_padding.y;
+    let bias = LightData.colorB_Bias_samples_padding.y;
+
+    let shadowSampleCount:u32 = u32(LightData.colorB_Bias_samples_padding.z);
+
+    var shadowSampleOffsets4x4 : array<vec2<f32>, 16> = array<vec2<f32>, 16>(
+        vec2(-1.5, -1.5), vec2(-1.5, -0.5), vec2(-1.5, 0.5), vec2(-1.5, 1.5),
+        vec2(-0.5, -1.5), vec2(-0.5, -0.5), vec2(-0.5, 0.5), vec2(-0.5, 1.5),
+        vec2( 0.5, -1.5), vec2( 0.5, -0.5), vec2( 0.5, 0.5), vec2( 0.5, 1.5),
+        vec2( 1.5, -1.5), vec2( 1.5, -0.5), vec2( 1.5, 0.5), vec2( 1.5, 1.5)
+    );
+
+    var shadowSampleOffsets3x3 : array<vec2<f32>, 9> = array<vec2<f32>, 9>(
+        vec2(-1.0, -1.0), vec2(0.0, -1.0), vec2(1.0, -1.0),
+        vec2(-1.0,  0.0), vec2(0.0,  0.0), vec2(1.0,  0.0),
+        vec2(-1.0,  1.0), vec2(0.0,  1.0), vec2(1.0,  1.0)
+    );
+
+    var shadowSampleOffsets2x2 : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+        vec2(-0.5, -0.5), vec2(-0.5, 0.5), 
+        vec2( 0.5, -0.5), vec2( 0.5, 0.5),
+    );
+
+    var shadowSampleOffsets1x2 : array<vec2<f32>, 2> = array<vec2<f32>, 2>(
+        vec2(-0.5, -0.5), vec2(0.5, 0.5)
+    );
+
+    var shadowSampleOffsets1x1 : array<vec2<f32>, 1> = array<vec2<f32>, 1>(
+        vec2(0.0, 0.0)
+    );
+
+    let texelSize = 1.0 / vec2<f32>(textureDimensions(ShadowMap, 0));
+
     var visibility = 0.0;
-    visibility += textureSampleCompare(ShadowMap, ShadowSampler, input.shadowPos.xy, input.shadowPos.z - bias);
+    // PCF
+    for(var i = 0u; i < shadowSampleCount; i = i + 1u) {
+        if(shadowSampleCount == 16) {
+            visibility += textureSampleCompare(ShadowMap, ShadowSampler, 
+                input.shadowPos.xy + shadowSampleOffsets4x4[i] * texelSize, 
+                input.shadowPos.z - bias);
+        } else if(shadowSampleCount == 9) {
+            visibility += textureSampleCompare(ShadowMap, ShadowSampler, 
+                input.shadowPos.xy + shadowSampleOffsets3x3[i] * texelSize, 
+                input.shadowPos.z - bias);
+        } else if(shadowSampleCount == 4) {
+            visibility += textureSampleCompare(ShadowMap, ShadowSampler, 
+                input.shadowPos.xy + shadowSampleOffsets2x2[i] * texelSize, 
+                input.shadowPos.z - bias);
+        } else if(shadowSampleCount == 2) {
+            visibility += textureSampleCompare(ShadowMap, ShadowSampler, 
+                input.shadowPos.xy + shadowSampleOffsets1x2[i] * texelSize, 
+                input.shadowPos.z - bias);
+        } else {
+            visibility += textureSampleCompare(ShadowMap, ShadowSampler, 
+                input.shadowPos.xy + shadowSampleOffsets1x1[i] * texelSize, 
+                input.shadowPos.z - bias);
+        }
+    }
 
-    outColor = lightIntensity * getLightColor() * visibility;
+    visibility /= f32(shadowSampleCount);
+
+    outColor = (lightIntensity * visibility + ambient) * getLightColor();
 
     return vec4<f32>(outColor, 1);
 }
