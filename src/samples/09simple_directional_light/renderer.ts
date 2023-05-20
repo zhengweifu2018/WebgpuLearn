@@ -318,20 +318,23 @@ export class Renderer {
         return buffer;
     }
 
-    private createTextures() {
-        this.m_shadowDepthTexture = this.m_device.createTexture({
-            size: [this.m_directionalLight.ShadowMapSize, this.m_directionalLight.ShadowMapSize, 1],
-            format: "depth32float",
-            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
-        });
+    private createTextures(bIncludeShadow: boolean = true, bIncludeMain: boolean = true) {
+        if(bIncludeShadow) {
+            this.m_shadowDepthTexture = this.m_device.createTexture({
+                size: [this.m_directionalLight.ShadowMapSize, this.m_directionalLight.ShadowMapSize, 1],
+                format: "depth32float",
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
+            });
 
-        this.m_shadowDepthTextureView = this.m_shadowDepthTexture.createView();
-
-        this.m_mainDepthTexture = this.m_device.createTexture({
-            size: [this.m_width, this.m_height, 1],
-            format: "depth24plus",
-            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
-        });
+            this.m_shadowDepthTextureView = this.m_shadowDepthTexture.createView();
+        }
+        if(bIncludeMain) {
+            this.m_mainDepthTexture = this.m_device.createTexture({
+                size: [this.m_width, this.m_height, 1],
+                format: "depth24plus",
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING 
+            });
+        }
     }
 
     private createRenderObjects() {
@@ -585,9 +588,10 @@ export class Renderer {
 
         // main pass
         {
+            const targetTexture = this.m_context.getCurrentTexture();
             const mainPassDescriptor: GPURenderPassDescriptor = {
                 colorAttachments: [{
-                    view: this.m_context.getCurrentTexture().createView(),
+                    view: targetTexture.createView(),
                     clearValue: { r: 0.3, g: 0.3, b: 0.7, a: 1.0 },
                     loadOp: 'clear',
                     storeOp: 'store',
@@ -640,5 +644,19 @@ export class Renderer {
         this.makePipelines();
         this.UpdateLightUniformBuffer();
         this.renderInternal();
+
+        window.addEventListener('resize', () => {  
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            const newWidth = this.m_canvas.clientWidth * devicePixelRatio;
+            const newHeight= this.m_canvas.clientHeight * devicePixelRatio;
+            if(this.m_width === newWidth && this.m_height === newHeight) return;
+            this.m_width = this.m_canvas.width = newWidth
+            this.m_height = this.m_canvas.height = newHeight;
+            
+            this.m_camera.Ratio = this.m_width / this.m_height;
+            
+            this.m_mainDepthTexture.destroy();
+            this.createTextures(false, true);
+        });
     }
 }
